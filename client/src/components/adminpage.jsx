@@ -103,7 +103,6 @@ const SubscriptionManagement = () => {
   };
 
   const handleDeleteSubscription = async (subscriptionId) => {
-    console.log("subscription id",subscriptionId)
     if (window.confirm('Are you sure you want to delete this subscription and all its deliveries?')) {
       try {
         await dispatch(deleteSubscriptionAndDeliveries(subscriptionId)).unwrap();
@@ -390,27 +389,28 @@ const SubscriptionManagement = () => {
                 <div key={subscription._id} className="bg-white p-4 rounded-lg shadow">
                   <div className="flex justify-between items-start">
                     <div>
-                      <p className="text-sm font-medium text-gray-500">Subscription ID</p>
-                      <p className="text-sm text-gray-900">{subscription._id}</p>
+                      <p className="text-xs font-medium text-gray-500">Subscription ID</p>
+                      <p className="text-xs text-gray-900 truncate w-32">{subscription._id}</p>
                     </div>
                     <div className="text-right">
-                      <p className="text-sm font-medium text-gray-500">User</p>
-                      <p className="text-sm text-gray-900">{subscription.user?.name || 'N/A'}</p>
+                      <p className="text-xs font-medium text-gray-500">User</p>
+                      <p className="text-xs text-gray-900">{subscription.user?.name || 'N/A'}</p>
                     </div>
                   </div>
                   
-                  <div className="mt-4">
-                    <p className="text-sm font-medium text-gray-500">Subscription</p>
-                    <p className="text-sm text-gray-900">{subscription.product?.name || 'N/A'}</p>
+                  <div className="mt-3">
+                    <p className="text-xs font-medium text-gray-500">Subscription</p>
+                    <p className="text-sm font-medium text-gray-900">{subscription.product?.name || 'N/A'}</p>
+                    <p className="text-xs text-gray-500">{subscription.totalPrice || '0.00'} / month</p>
                   </div>
                   
-                  <div className="mt-4 grid grid-cols-2 gap-4">
+                  <div className="mt-3 grid grid-cols-2 gap-3">
                     <div>
-                      <p className="text-sm font-medium text-gray-500">Payment Status</p>
+                      <label className="block text-xs font-medium text-gray-500">Payment Status</label>
                       <select
                         value={getDisplayValue(subscription, 'paymentStatus')}
                         onChange={(e) => handlePaymentStatusChange(subscription._id, e.target.value)}
-                        className="mt-1 block w-full pl-3 pr-10 py-2 text-xs border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 rounded-md"
+                        className="mt-1 block w-full pl-2 pr-8 py-1.5 text-xs border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 rounded-md"
                       >
                         <option value="pending">Pending</option>
                         <option value="paid">Paid</option>
@@ -418,11 +418,11 @@ const SubscriptionManagement = () => {
                       </select>
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-gray-500">Status</p>
+                      <label className="block text-xs font-medium text-gray-500">Status</label>
                       <select
                         value={getDisplayValue(subscription, 'status')}
                         onChange={(e) => handleStatusChange(subscription._id, e.target.value)}
-                        className="mt-1 block w-full pl-3 pr-10 py-2 text-xs border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 rounded-md"
+                        className="mt-1 block w-full pl-2 pr-8 py-1.5 text-xs border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 rounded-md"
                       >
                         <option value="active">Active</option>
                         <option value="pending">Pending</option>
@@ -431,17 +431,38 @@ const SubscriptionManagement = () => {
                       </select>
                     </div>
                   </div>
-                  <div className="mt-4 flex justify-end">
+                  <div className="mt-3 flex justify-end">
                     <button
                       onClick={() => handleDeleteSubscription(subscription._id)}
                       disabled={deleteLoading}
-                      className="text-sm text-red-600 hover:text-red-900 disabled:opacity-50"
+                      className="text-xs px-3 py-1.5 border border-red-300 rounded-md text-red-600 hover:text-red-900 hover:bg-red-50 disabled:opacity-50"
                     >
-                      {deleteLoading ? 'Deleting...' : 'Delete Subscription'}
+                      {deleteLoading ? 'Deleting...' : 'Delete'}
                     </button>
                   </div>
                 </div>
               ))}
+
+              {/* Mobile Pagination */}
+              <div className="flex items-center justify-between bg-white p-4 rounded-lg shadow">
+                <button
+                  onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                  disabled={currentPage === 1}
+                  className="relative inline-flex items-center px-3 py-1.5 border border-gray-300 text-xs font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
+                >
+                  Previous
+                </button>
+                <span className="text-xs text-gray-700">
+                  Page {currentPage} of {totalPages}
+                </span>
+                <button
+                  onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                  disabled={currentPage === totalPages}
+                  className="relative inline-flex items-center px-3 py-1.5 border border-gray-300 text-xs font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
+                >
+                  Next
+                </button>
+              </div>
             </div>
 
             {/* Desktop Table View */}
