@@ -6,4 +6,18 @@ import tailwindcss from '@tailwindcss/vite'
 export default defineConfig({
   plugins: [tailwindcss(),
     react()],
+    build: {
+    outDir: 'dist',
+  },
+  base: '/',
 })
+
+
+// No need to import tailwindcss plugin like that — Tailwind works via `postcss.config.js`
+// export default defineConfig({
+//   plugins: [react()],
+//   build: {
+//     outDir: 'dist',
+//   },
+//   base: '/', // 🔥 Ensures all routes and assets work correctly
+// })
