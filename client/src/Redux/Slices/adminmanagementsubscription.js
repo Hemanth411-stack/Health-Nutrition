@@ -10,7 +10,7 @@ export const fetchAllSubscriptions = createAsyncThunk(
       const token = state.user?.userInfo?.token;
 
       const response = await axios.get(
-        'http://localhost:5000/api/subscriptions/admin/all',
+        ' https://health-nutrition-2.onrender.com/api/subscriptions/admin/all',
         {
           headers: {
             'Content-Type': 'application/json',
@@ -37,7 +37,7 @@ export const updateSubscriptionStatus = createAsyncThunk(
       const token = state.user?.userInfo?.token;
 
       const response = await axios.put(
-        'http://localhost:5000/api/subscriptions/update-status',
+        ' https://health-nutrition-2.onrender.com/api/subscriptions/update-status',
         {
           subscriptionId,
           paymentStatus,

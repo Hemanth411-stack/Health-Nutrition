@@ -10,7 +10,7 @@ export const adminCancelAndReschedule = createAsyncThunk(
       const state = getState();
       const token = state.user?.userInfo?.token;
       const response = await axios.post(
-        'http://localhost:5000/api/deliveries/admin-leave',
+        ' https://health-nutrition-2.onrender.com/api/deliveries/admin-leave',
         { date, message },
         {
           headers: {
@@ -32,7 +32,7 @@ export const fetchCancellationMessages = createAsyncThunk(
     try {
       const state = getState();
       const token = state.user?.userInfo?.token;
-      const response = await axios.get('http://localhost:5000/api/deliveries/admin-msg', {
+      const response = await axios.get(' https://health-nutrition-2.onrender.com/api/deliveries/admin-msg', {
         headers: {
           Authorization: `Bearer ${token}`,
         },

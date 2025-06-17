@@ -1,7 +1,7 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axios from 'axios';
 
-const API_URL = 'http://localhost:5000/api/products';
+const API_URL = ' https://health-nutrition-2.onrender.com/api/products';
 
 // Async Thunks
 export const fetchProducts = createAsyncThunk(

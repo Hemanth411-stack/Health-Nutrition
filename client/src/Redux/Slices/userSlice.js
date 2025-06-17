@@ -28,7 +28,7 @@ export const loginUser = createAsyncThunk(
   'user/login',
   async (credentials, { rejectWithValue }) => {
     try {
-      const res = await axios.post('http://localhost:5000/api/auth/login', credentials);
+      const res = await axios.post(' https://health-nutrition-2.onrender.com/api/auth/login', credentials);
       return res.data;
     } catch (err) {
       return rejectWithValue(err.response?.data?.message || 'Login failed');
@@ -40,7 +40,7 @@ export const registerUser = createAsyncThunk(
   'user/register',
   async (userData, { rejectWithValue }) => {
     try {
-      const res = await axios.post('http://localhost:5000/api/auth/register', userData);
+      const res = await axios.post(' https://health-nutrition-2.onrender.com/api/auth/register', userData);
       return res.data;
     } catch (err) {
       return rejectWithValue(err.response?.data?.message || 'Registration failed');
