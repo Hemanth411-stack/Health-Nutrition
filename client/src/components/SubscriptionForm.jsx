@@ -660,7 +660,7 @@ const SubscriptionForm = () => {
                           alt="PhonePe" 
                           className="w-9 h-9 mr-2"
                         />
-                        <span>PhonePe: 7989834729</span>
+                        <span>PhonePe: 897822735</span>
                       </div>
                     </div>
                   </div>

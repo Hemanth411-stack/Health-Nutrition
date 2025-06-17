@@ -258,32 +258,32 @@ const SubscriptionManagement = () => {
               </div>
             )}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label htmlFor="cancelDate" className="block text-sm font-medium text-gray-700">
-                  Delivery Date to Cancel
-                </label>
-                <input
-                  type="date"
-                  id="cancelDate"
-                  value={cancelDate}
-                  onChange={(e) => setCancelDate(e.target.value)}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                />
-              </div>
-              <div>
-                <label htmlFor="cancelMessage" className="block text-sm font-medium text-gray-700">
-                  Cancellation Message
-                </label>
-                <input
-                  type="text"
-                  id="cancelMessage"
-                  value={cancelMessage}
-                  onChange={(e) => setCancelMessage(e.target.value)}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                  placeholder="Reason for cancellation"
-                />
-              </div>
-            </div>
+  <div>
+    <label htmlFor="cancelDate" className="block text-xs font-medium text-gray-600 uppercase tracking-wider">
+      Delivery Date to Cancel
+    </label>
+    <input
+      type="date"
+      id="cancelDate"
+      value={cancelDate}
+      onChange={(e) => setCancelDate(e.target.value)}
+      className="mt-1 block w-full rounded border-gray-300 py-1.5 px-3 text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+    />
+  </div>
+  <div>
+    <label htmlFor="cancelMessage" className="block text-xs font-medium text-gray-600 uppercase tracking-wider">
+      Cancellation Message
+    </label>
+    <input
+      type="text"
+      id="cancelMessage"
+      value={cancelMessage}
+      onChange={(e) => setCancelMessage(e.target.value)}
+      className="mt-1 block w-full rounded border-gray-300 py-1.5 px-3 text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+      placeholder="Reason for cancellation"
+    />
+  </div>
+</div>
             <div className="mt-4 flex justify-end space-x-3">
               <button
                 onClick={() => setShowCancelForm(false)}
