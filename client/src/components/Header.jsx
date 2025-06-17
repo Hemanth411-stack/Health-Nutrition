@@ -17,7 +17,7 @@ const Header = () => {
   const location = useLocation();
 
   const hasActiveSubscription = subscriptions?.some(
-    (sub) => sub.status === "active" || sub.status === "completed"
+    (sub) => sub.status === "active" || sub.status === "completed" || sub.status === "pending"
   );
 
   useEffect(() => {
