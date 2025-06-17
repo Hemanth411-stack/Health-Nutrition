@@ -613,7 +613,7 @@ const SubscriptionForm = () => {
                           <p className="text-sm text-gray-500">250ml daily (₹13/day)</p>
                         </div>
                       </div>
-                      <span className="font-medium">+₹900</span>
+                      <span className="font-medium">+₹600</span>
                     </div>
                   </div>
                 </div>
@@ -785,7 +785,7 @@ const SubscriptionForm = () => {
                 {formData.addOnPrices.ragiJawa > 0 && (
                   <div className="flex justify-between">
                     <span className="text-gray-600">Ragi Jawa:</span>
-                    <span className="font-medium">+₹900</span>
+                    <span className="font-medium">+₹600</span>
                   </div>
                 )}
               </div>

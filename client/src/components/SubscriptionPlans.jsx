@@ -61,7 +61,7 @@ const SubscriptionPlans = () => {
     {
       id: 'ragiJawa',
       name: 'Ragi Jawa',
-      price: 900,
+      price: 600,
       description: '250ml daily (₹13/day)',
       icon: (
         <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-amber-600" viewBox="0 0 20 20" fill="currentColor">
@@ -100,7 +100,7 @@ const SubscriptionPlans = () => {
 
   const familyPlan = products.find(product => product.name === "Family Combo Pack");
   const bachelorPlan = products.find(product => product.name === "Bachelor Combo Pack");
-  const babyPlan = products.find(product => product.name === "baby box");
+  const babyPlan = products.find(product => product.name === "Kid box");
 
   const renderPlanCard = (plan, planType) => {
     if (!plan) return null;
