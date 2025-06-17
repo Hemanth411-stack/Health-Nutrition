@@ -77,7 +77,7 @@ import deliverySliceReducer from "../Redux/Slices/delivery.js";
 import adminsubscriptionSliceReducer from "../Redux/Slices/adminmanagementsubscription.js";
 import deliverymanagementSliceReducer from "../Redux/Slices/deliverymanagement.js";
 import adminmessagesliceReducer from "../Redux/Slices/adminmessages.js";
-
+import cancelsubscriptionSliceReducer from "../Redux/Slices/adminsubcancel.js"
 // Persist config for ONLY the auth token
 const authPersistConfig = {
   key: 'user',
@@ -96,7 +96,8 @@ const rootReducer = combineReducers({
   delivery: deliverySliceReducer,
   adminsubscriptions: adminsubscriptionSliceReducer,
   deliveriesmanagement: deliverymanagementSliceReducer,
-  adminmessages: adminmessagesliceReducer
+  adminmessages: adminmessagesliceReducer,
+  cancelsubscription : cancelsubscriptionSliceReducer
 });
 
 export const store = configureStore({

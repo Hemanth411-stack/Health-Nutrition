@@ -4,8 +4,9 @@ import { Link } from 'react-router-dom';
 import { 
   fetchAllSubscriptions, 
   updateSubscriptionStatus,
-  clearSubscriptionErrors
+  clearSubscriptionErrors,
 } from '../Redux/Slices/adminmanagementsubscription.js';
+import {  deleteSubscriptionAndDeliveries } from "../Redux/Slices/adminsubcancel.js"
 import { 
   adminCancelAndReschedule,
   resetAdminActionState 
@@ -18,7 +19,9 @@ const SubscriptionManagement = () => {
     loading,
     error,
     updateLoading,
-    updateError
+    updateError,
+    deleteLoading,
+    deleteError
   } = useSelector(state => state.adminsubscriptions);
 
   const { adminAction } = useSelector(state => state.adminmessages);
@@ -96,6 +99,18 @@ const SubscriptionManagement = () => {
       setTimeout(() => setSaveSuccess(null), 3000);
     } catch (error) {
       console.error("Failed to save changes:", error);
+    }
+  };
+
+  const handleDeleteSubscription = async (subscriptionId) => {
+    console.log("subscription id",subscriptionId)
+    if (window.confirm('Are you sure you want to delete this subscription and all its deliveries?')) {
+      try {
+        await dispatch(deleteSubscriptionAndDeliveries(subscriptionId)).unwrap();
+        setLocalSubscriptions(prev => prev.filter(sub => sub._id !== subscriptionId));
+      } catch (error) {
+        console.error('Failed to delete subscription:', error);
+      }
     }
   };
 
@@ -258,32 +273,32 @@ const SubscriptionManagement = () => {
               </div>
             )}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-  <div>
-    <label htmlFor="cancelDate" className="block text-xs font-medium text-gray-600 uppercase tracking-wider">
-      Delivery Date to Cancel
-    </label>
-    <input
-      type="date"
-      id="cancelDate"
-      value={cancelDate}
-      onChange={(e) => setCancelDate(e.target.value)}
-      className="mt-1 block w-full rounded border-gray-300 py-1.5 px-3 text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-    />
-  </div>
-  <div>
-    <label htmlFor="cancelMessage" className="block text-xs font-medium text-gray-600 uppercase tracking-wider">
-      Cancellation Message
-    </label>
-    <input
-      type="text"
-      id="cancelMessage"
-      value={cancelMessage}
-      onChange={(e) => setCancelMessage(e.target.value)}
-      className="mt-1 block w-full rounded border-gray-300 py-1.5 px-3 text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-      placeholder="Reason for cancellation"
-    />
-  </div>
-</div>
+              <div>
+                <label htmlFor="cancelDate" className="block text-xs font-medium text-gray-600 uppercase tracking-wider">
+                  Delivery Date to Cancel
+                </label>
+                <input
+                  type="date"
+                  id="cancelDate"
+                  value={cancelDate}
+                  onChange={(e) => setCancelDate(e.target.value)}
+                  className="mt-1 block w-full rounded border-gray-300 py-1.5 px-3 text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                />
+              </div>
+              <div>
+                <label htmlFor="cancelMessage" className="block text-xs font-medium text-gray-600 uppercase tracking-wider">
+                  Cancellation Message
+                </label>
+                <input
+                  type="text"
+                  id="cancelMessage"
+                  value={cancelMessage}
+                  onChange={(e) => setCancelMessage(e.target.value)}
+                  className="mt-1 block w-full rounded border-gray-300 py-1.5 px-3 text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                  placeholder="Reason for cancellation"
+                />
+              </div>
+            </div>
             <div className="mt-4 flex justify-end space-x-3">
               <button
                 onClick={() => setShowCancelForm(false)}
@@ -347,6 +362,20 @@ const SubscriptionManagement = () => {
             </div>
           </div>
         )}
+        {deleteError && (
+          <div className="mb-4 p-4 bg-red-50 border-l-4 border-red-500 rounded-md">
+            <div className="flex">
+              <div className="flex-shrink-0">
+                <svg className="h-5 w-5 text-red-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <div className="ml-3">
+                <p className="text-sm text-red-700">{deleteError}</p>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Loading State */}
         {loading ? (
@@ -402,6 +431,15 @@ const SubscriptionManagement = () => {
                       </select>
                     </div>
                   </div>
+                  <div className="mt-4 flex justify-end">
+                    <button
+                      onClick={() => handleDeleteSubscription(subscription._id)}
+                      disabled={deleteLoading}
+                      className="text-sm text-red-600 hover:text-red-900 disabled:opacity-50"
+                    >
+                      {deleteLoading ? 'Deleting...' : 'Delete Subscription'}
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>
@@ -417,6 +455,7 @@ const SubscriptionManagement = () => {
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Subscription</th>
                       <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Payment Status</th>
                       <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
@@ -462,6 +501,15 @@ const SubscriptionManagement = () => {
                             <option value="cancelled">Cancelled</option>
                             <option value="completed">Completed</option>
                           </select>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                          <button
+                            onClick={() => handleDeleteSubscription(subscription._id)}
+                            disabled={deleteLoading}
+                            className="text-red-600 hover:text-red-900 disabled:opacity-50"
+                          >
+                            {deleteLoading ? 'Deleting...' : 'Delete'}
+                          </button>
                         </td>
                       </tr>
                     ))}
@@ -549,6 +597,18 @@ const SubscriptionManagement = () => {
               </div>
               <div className="ml-3">
                 <p className="text-sm font-medium text-green-800">Changes saved successfully!</p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Delete Loading Overlay */}
+        {deleteLoading && (
+          <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
+            <div className="bg-white p-6 rounded-lg shadow-lg">
+              <p className="text-lg font-medium">Deleting subscription and deliveries...</p>
+              <div className="mt-4 flex justify-center">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
               </div>
             </div>
           </div>

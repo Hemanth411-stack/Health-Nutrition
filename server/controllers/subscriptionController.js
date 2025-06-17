@@ -392,6 +392,36 @@ export const updateSubscriptionStatus = async (req, res) => {
   }
 };
 
+export const deleteSubscriptionAndDeliveries = async (req, res) => {
+  try {
+    const { subscriptionId } = req.body;
+    /* 1️⃣ Fetch subscription */
+    const subscription = await Subscription.findById(subscriptionId);
+    if (!subscription) {
+      return res.status(404).json({ success: false, message: 'Subscription not found' });
+    }
+
+    /* 3️⃣ Delete all deliveries for this subscription */
+    const deliveryDeleteResult = await Delivery.deleteMany({ subscription: subscriptionId });
+
+    /* 4️⃣ Delete the subscription itself */
+    await subscription.deleteOne();
+
+    /* 5️⃣ Respond */
+    return res.status(200).json({
+      success: true,
+      deletedDeliveries: deliveryDeleteResult.deletedCount,
+      message: `Subscription and ${deliveryDeleteResult.deletedCount} delivery(ies) deleted.`,
+    });
+  } catch (err) {
+    console.error('Error deleting subscription:', err);
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to delete subscription',
+      error: err.message,
+    });
+  }
+};
 
 
 // export const scheduleAllDeliveriesForSubscription = async (subscriptionId) => {
