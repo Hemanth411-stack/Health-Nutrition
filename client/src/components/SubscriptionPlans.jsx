@@ -10,7 +10,7 @@ const SubscriptionPlans = () => {
   const products = useSelector(selectAllProducts);
   const status = useSelector(selectProductStatus);
   const error = useSelector(selectProductError);
-  
+  const token = useSelector(state => state.user?.userInfo?.token);
   const [selectedAddons, setSelectedAddons] = useState({
     familyPlan: { ragiJawa: false, eggs: false, useAndThrowBox: false },
     bachelorPlan: { ragiJawa: false, eggs: false, useAndThrowBox: false },
@@ -35,6 +35,15 @@ const SubscriptionPlans = () => {
 
   const handleSubscribe = (productId, planType) => {
     const selectedProduct = products.find(product => product._id === productId);
+    if (!token) {
+      // Optionally remember where the user was heading so you can
+      // bounce them back here after a successful sign‑in.
+      navigate('/signin', {
+        replace: true,
+        state: { redirectTo: '/checkout' }   // or whatever makes sense
+      });
+      return;  // stop right here
+    }
     if (!selectedProduct) return;
 
     const planData = {
