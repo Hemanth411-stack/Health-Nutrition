@@ -277,13 +277,13 @@ const MyDeliveries = () => {
                             </p>
                           </div>
                         </div>
-                        {delivery.status === 'pending' && (
+                        {/* {delivery.status === 'pending' && (
                           <div className="mt-4 pt-4 border-t border-gray-200">
                             <button className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
                               Track Delivery
                             </button>
                           </div>
-                        )}
+                        )} */}
                       </div>
                     )}
                   </div>
