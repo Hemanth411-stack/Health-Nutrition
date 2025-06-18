@@ -105,7 +105,9 @@ const SubscriptionManagement = () => {
   const handleDeleteSubscription = async (subscriptionId) => {
     if (window.confirm('Are you sure you want to delete this subscription and all its deliveries?')) {
       try {
+        
         await dispatch(deleteSubscriptionAndDeliveries(subscriptionId)).unwrap();
+       
         setLocalSubscriptions(prev => prev.filter(sub => sub._id !== subscriptionId));
       } catch (error) {
         console.error('Failed to delete subscription:', error);
@@ -526,7 +528,7 @@ const SubscriptionManagement = () => {
                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                           <button
                             onClick={() => handleDeleteSubscription(subscription._id)}
-                            disabled={deleteLoading}
+              
                             className="text-red-600 hover:text-red-900 disabled:opacity-50"
                           >
                             {deleteLoading ? 'Deleting...' : 'Delete'}

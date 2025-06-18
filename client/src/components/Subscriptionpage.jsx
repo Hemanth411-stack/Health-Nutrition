@@ -48,7 +48,7 @@ const hasActive = subscriptions.some(sub => sub?.status === 'active');
     console.log("dates",start,end)
     const diffTime = end - start;
     console.log("time details",Math.ceil(diffTime / (1000 * 60 * 60 * 24)))
-    return Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1 ;
+    return Math.ceil(diffTime / (1000 * 60 * 60 * 24)) ;
   };
 
   const getStatusStyles = (status) => {

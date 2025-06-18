@@ -2,7 +2,8 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { fetchProducts, selectAllProducts, selectProductStatus, selectProductError } from "../Redux/Slices/productslice";
-import logo from "../assets/familybox.jpg";
+import logo from "../assets/familybox.png";
+
 
 const SubscriptionPlans = () => {
   const navigate = useNavigate();
