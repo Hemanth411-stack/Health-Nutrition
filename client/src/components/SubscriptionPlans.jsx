@@ -108,8 +108,8 @@ const SubscriptionPlans = () => {
   if (status === 'loading') return <div className="text-center py-20">Loading plans...</div>;
   if (status === 'failed') return <div className="text-center py-20 text-red-500">Error: {error}</div>;
 
-  const familyPlan = products.find(product => product.name === "Family Combo Pack");
-  const bachelorPlan = products.find(product => product.name === "Bachelor Combo Pack");
+  const familyPlan = products.find(product => product.name === "Family Pack");
+  const bachelorPlan = products.find(product => product.name === "Bachelor Pack");
   const babyPlan = products.find(product => product.name === "Kid box");
 
   const renderPlanCard = (plan, planType) => {

@@ -173,7 +173,7 @@ const DeliveryManagement = () => {
                           {new Date(delivery.deliveryDate).toLocaleDateString()}
                         </p>
                         <p className="text-sm text-gray-500">
-                          {delivery.slot === 'morning' ? 'Morning (8AM-12PM)' : 'Evening (4PM-8PM)'}
+                          {delivery.slot === 'morning 6Am - 8Am' ? 'Morning (6AM-8AM)' : 'morning (8AM-10AM)'}
                           {delivery.isFestivalOrSunday && ' (Holiday Delivery)'}
                         </p>
                       </div>

@@ -34,6 +34,7 @@ const SubscriptionManagement = () => {
   const [showCancelForm, setShowCancelForm] = useState(false);
   const [cancelDate, setCancelDate] = useState('');
   const [cancelMessage, setCancelMessage] = useState('');
+  const [deletingId, setDeletingId] = useState(null); // Track which subscription is being deleted
 
   useEffect(() => {
     if (subscriptions.length > 0) {
@@ -105,12 +106,13 @@ const SubscriptionManagement = () => {
   const handleDeleteSubscription = async (subscriptionId) => {
     if (window.confirm('Are you sure you want to delete this subscription and all its deliveries?')) {
       try {
-        
+        setDeletingId(subscriptionId); // Set the deleting ID
         await dispatch(deleteSubscriptionAndDeliveries(subscriptionId)).unwrap();
-       
         setLocalSubscriptions(prev => prev.filter(sub => sub._id !== subscriptionId));
       } catch (error) {
         console.error('Failed to delete subscription:', error);
+      } finally {
+        setDeletingId(null); // Reset the deleting ID
       }
     }
   };
@@ -436,10 +438,18 @@ const SubscriptionManagement = () => {
                   <div className="mt-3 flex justify-end">
                     <button
                       onClick={() => handleDeleteSubscription(subscription._id)}
-                      disabled={deleteLoading}
-                      className="text-xs px-3 py-1.5 border border-red-300 rounded-md text-red-600 hover:text-red-900 hover:bg-red-50 disabled:opacity-50"
+                      disabled={deletingId === subscription._id}
+                      className="text-xs px-3 py-1.5 border border-red-300 rounded-md text-red-600 hover:text-red-900 hover:bg-red-50 disabled:opacity-50 flex items-center"
                     >
-                      {deleteLoading ? 'Deleting...' : 'Delete'}
+                      {deletingId === subscription._id ? (
+                        <>
+                          <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-red-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                          </svg>
+                          Deleting...
+                        </>
+                      ) : 'Delete'}
                     </button>
                   </div>
                 </div>
@@ -528,10 +538,18 @@ const SubscriptionManagement = () => {
                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                           <button
                             onClick={() => handleDeleteSubscription(subscription._id)}
-              
-                            className="text-red-600 hover:text-red-900 disabled:opacity-50"
+                            disabled={deletingId === subscription._id}
+                            className="text-red-600 hover:text-red-900 disabled:opacity-50 flex items-center"
                           >
-                            {deleteLoading ? 'Deleting...' : 'Delete'}
+                            {deletingId === subscription._id ? (
+                              <>
+                                <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-red-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                                Deleting...
+                              </>
+                            ) : 'Delete'}
                           </button>
                         </td>
                       </tr>

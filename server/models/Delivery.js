@@ -23,8 +23,7 @@ const deliverySchema = new mongoose.Schema({
 
   slot: {
     type: String,
-    enum: ['morning', 'evening'],
-    default: 'morning'
+    default: 'morning 6AM - 8AM'
   },
 
   deliveryDate: {

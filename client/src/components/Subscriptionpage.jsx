@@ -13,7 +13,7 @@ import {
 import { Link } from "react-router-dom";
 import Footer from "./Footer";
 
-const SubscriptionDashboard = () => {
+export const SubscriptionDashboard = () => {
   const [showWelcomeMessage, setShowWelcomeMessage] = useState(true);
   const [expandedCard, setExpandedCard] = useState(null);
   const dispatch = useDispatch();

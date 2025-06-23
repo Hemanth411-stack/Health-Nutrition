@@ -2,7 +2,7 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axios from 'axios';
 import getTokenFromLocalStorage from "./userSlice.js"
-const API_URL = ' https://health-nutrition-2.onrender.com/api/userinfo';
+const API_URL = 'http://localhost:5000/api/userinfo/';
 
 // Async Thunks
 export const fetchUserInfo = createAsyncThunk(
@@ -24,7 +24,7 @@ export const fetchUserInfo = createAsyncThunk(
 
 export const updateUserInfo = createAsyncThunk(
   'userInfo/updateUserInfo',
-  async ({ userData }, { getState, rejectWithValue }) => {
+  async ( userData , { getState, rejectWithValue }) => {
     try {
       const token = getState().user?.userInfo?.token;
 

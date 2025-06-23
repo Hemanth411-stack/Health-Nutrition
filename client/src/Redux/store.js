@@ -1,59 +1,4 @@
-// import { configureStore } from '@reduxjs/toolkit';
-// import { combineReducers } from 'redux';
-// import {
-//   persistStore,
-//   persistReducer,
-//   FLUSH,
-//   REHYDRATE,
-//   PAUSE,
-//   PERSIST,
-//   PURGE,
-//   REGISTER
-// } from 'redux-persist';
-// import storage from 'redux-persist/lib/storage';
 
-// import userReducer from '../Redux/Slices/userSlice.js';
-// // import subscriptionSliceReducer from "../Redux/Slices/productslice.js"
-// import productSliceReducer from "../Redux/Slices/productslice.js"
-// import userInfoSliceReducer from "../Redux/Slices/userInfoSlice.js"
-// import subscriptionSliceReducer from "../Redux/Slices/subscriptionSlice.js"
-// import deliverySliceReducer from "../Redux/Slices/delivery.js"
-// import adminsubscriptionSliceReducer from "../Redux/Slices/adminmanagementsubscription.js"
-// import deliverymanagementSliceReducer from "../Redux/Slices/deliverymanagement.js"
-// import adminmessagesliceReducer from "../Redux/Slices/adminmessages.js"
-
-
-// const persistConfig = {
-//   key: 'root',
-//   version: 1,
-//   storage,
-// };
-
-// const rootReducer = combineReducers({
-//   user: userReducer,
-//   products : productSliceReducer,
-//   userInfo : userInfoSliceReducer,
-//   subscriptions : subscriptionSliceReducer,
-//   delivery : deliverySliceReducer,
-//   adminsubscriptions : adminsubscriptionSliceReducer,
-//   deliveriesmanagement : deliverymanagementSliceReducer,
-//   adminmessages : adminmessagesliceReducer,
-// });
-
-// const persistedReducer = persistReducer(persistConfig, rootReducer);
-
-// export const store = configureStore({
-//   reducer: persistedReducer,
-
-//   middleware: (getDefaultMiddleware) =>
-//     getDefaultMiddleware({
-//       serializableCheck: {
-//         ignoredActions: [FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER],
-//       },
-//     }),
-// });
-
-// export const persistor = persistStore(store);
 import { configureStore } from '@reduxjs/toolkit';
 import { combineReducers } from 'redux';
 import {
@@ -77,7 +22,8 @@ import deliverySliceReducer from "../Redux/Slices/delivery.js";
 import adminsubscriptionSliceReducer from "../Redux/Slices/adminmanagementsubscription.js";
 import deliverymanagementSliceReducer from "../Redux/Slices/deliverymanagement.js";
 import adminmessagesliceReducer from "../Redux/Slices/adminmessages.js";
-import cancelsubscriptionSliceReducer from "../Redux/Slices/adminsubcancel.js"
+import cancelsubscriptionSliceReducer from "../Redux/Slices/adminsubcancel.js";
+import verifyDeliverySliceReducer from "../Redux/Slices/deliverystatusmanagement.js"
 // Persist config for ONLY the auth token
 const authPersistConfig = {
   key: 'user',
@@ -97,7 +43,8 @@ const rootReducer = combineReducers({
   adminsubscriptions: adminsubscriptionSliceReducer,
   deliveriesmanagement: deliverymanagementSliceReducer,
   adminmessages: adminmessagesliceReducer,
-  cancelsubscription : cancelsubscriptionSliceReducer
+  cancelsubscription : cancelsubscriptionSliceReducer,
+  verifyDelivery : verifyDeliverySliceReducer
 });
 
 export const store = configureStore({

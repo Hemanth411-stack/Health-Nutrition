@@ -8,6 +8,7 @@ import {
 import { authorize, protect } from '../middleware/authMiddleware.js';
 import { adminCancelDeliveriesAndReschedule, getAdminCancellationMessages } from '../controllers/admincontroller.js';
 import { deleteSubscriptionAndDeliveries } from '../controllers/subscriptionController.js';
+import { createDeliveryVerification, getAllVerifications, getMyVerificationStatus, updateVerificationStatus } from '../controllers/verifydelliverystatus.js';
 
 
 const router = express.Router();
@@ -21,4 +22,10 @@ router.delete('/admin-delete-subscription',protect,authorize('admin'),deleteSubs
 router.put('/status', protect,authorize('admin','deliveryboy'), updateDeliveryStatus);
 router.get('/admin/all', protect,authorize('admin','deliveryboy'), Alldeliveries);
 router.post('/admin-leave',protect,authorize('admin'),adminCancelDeliveriesAndReschedule)
+
+// admin approval for deliverable status
+router.post('/deliverable',protect,createDeliveryVerification)
+router.get('/deliverable',protect,getMyVerificationStatus)
+router.put('/aadmin-deliverable',protect,authorize('admin'),updateVerificationStatus)
+router.get('/get-all',protect,authorize('admin'),getAllVerifications)
 export default router;

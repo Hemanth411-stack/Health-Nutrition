@@ -170,7 +170,7 @@ const scheduleAllDeliveriesForSubscription = async (subscriptionId) => {
         await Delivery.create({
           user: subscription.user._id,
           address: userAddress,
-          slot: 'morning', // Default slot
+          slot: userInfo.slot || 'morning 6AM - 8AM', // Default slot
           deliveryDate: dateString,
           subscription: subscription._id,
           product: subscription.product._id,

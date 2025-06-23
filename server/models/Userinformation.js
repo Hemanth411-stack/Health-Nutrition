@@ -11,6 +11,11 @@ const userInfoSchema = new mongoose.Schema({
   phone: { type: String, required: true },
   email: { type: String },
 
+  slot:{
+    type:String,
+    default : "morning 6Am - 8Am"
+  },
+
   address: {
     street: { type: String, required: true },
     area: { type: String, required: true },

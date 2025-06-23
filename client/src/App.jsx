@@ -9,6 +9,9 @@ import MyDeliveries from "./components/MyDeliveries.jsx"
 import SubscriptionManagement from "./components/adminpage.jsx"
 import DeliveryManagement from "./components/deliverymanagement.jsx"
 import CancellationMessages from "./components/CancellationMessages.jsx"
+import AddressManagement from "./components/address.jsx"
+import DeliveryVerificationDashboard from "./components/admindeliveryverification.jsx"
+import AdminDashboard from "./components/admindashboard.jsx"
 
 
 function App() {
@@ -25,9 +28,12 @@ function App() {
         <Route path="/checkout" element={<SubscriptionForm />} />
         <Route path="/me" element={<SubscriptionDashboard />} />
         <Route path="/deliveries" element={<MyDeliveries />} />
-        <Route path="/admin-subscription" element={<SubscriptionManagement />} />
+        {/* <Route path="/admin-subscription" element={<SubscriptionManagement />} /> */}
         <Route path="/manage-delivery" element={<DeliveryManagement />} />
         <Route path="/cancellation-notices" element={<CancellationMessages />} />
+        <Route path="/address" element={<AddressManagement/>}></Route>
+        <Route path="/admin-address-verification" element={<DeliveryVerificationDashboard/>}></Route>
+        <Route path="/admin-dashboard" element={<AdminDashboard/>}></Route>
      
     </Routes>
     </>

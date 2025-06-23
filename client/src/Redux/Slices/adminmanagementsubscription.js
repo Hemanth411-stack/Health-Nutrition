@@ -10,7 +10,7 @@ export const fetchAllSubscriptions = createAsyncThunk(
       const token = state.user?.userInfo?.token;
 
       const response = await axios.get(
-        ' https://health-nutrition-2.onrender.com/api/subscriptions/admin/all',
+        'https://health-nutrition-2.onrender.com/api/subscriptions/admin/all',
         {
           headers: {
             'Content-Type': 'application/json',
@@ -89,7 +89,7 @@ const adminsubscriptionSlice = createSlice({
         state.loading = false;
         state.error = action.payload?.message || 'Failed to fetch subscriptions';
       })
-      
+
       // Update subscription status cases
       .addCase(updateSubscriptionStatus.pending, (state) => {
         state.updateLoading = true;
@@ -98,7 +98,7 @@ const adminsubscriptionSlice = createSlice({
       .addCase(updateSubscriptionStatus.fulfilled, (state, action) => {
         state.updateLoading = false;
         const updatedSubscription = action.payload.subscription;
-        state.subscriptions = state.subscriptions.map(sub => 
+        state.subscriptions = state.subscriptions.map(sub =>
           sub._id === updatedSubscription._id ? updatedSubscription : sub
         );
       })

@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { useLocation, useNavigate } from "react-router-dom";
 import { createSubscription } from "../Redux/Slices/subscriptionSlice.js";
-// import { scheduleDelivery } from "../Redux/Slices/delivery.js";
 import { fetchUserInfo, updateUserInfo, selectUserInfo, selectUserInfoStatus } from "../Redux/Slices/userInfoSlice.js";
+import { getMyVerificationStatus } from "../Redux/Slices/deliverystatusmanagement.js";
 import Header from "./Header";
 
 const SubscriptionForm = () => {
@@ -12,9 +12,24 @@ const SubscriptionForm = () => {
   const location = useLocation();
   const plan = location.state?.plan;
   
-  // Get user info from Redux
+  // Refs for scrolling to errors
+  const firstNameRef = useRef(null);
+  const lastNameRef = useRef(null);
+  const emailRef = useRef(null);
+  const phoneRef = useRef(null);
+  const addressRef = useRef(null);
+  const areaRef = useRef(null);
+  const cityRef = useRef(null);
+  const stateRef = useRef(null);
+  const pincodeRef = useRef(null);
+  const startDateRef = useRef(null);
+  const utrNumberRef = useRef(null);
+  const termsRef = useRef(null);
+
+  // Get user info and verification status from Redux
   const userInfo = useSelector(selectUserInfo);
   const userInfoStatus = useSelector(selectUserInfoStatus);
+  const { myVerification, loading: verificationLoading } = useSelector(state => state.verifyDelivery);
 
   // Form state
   const [formData, setFormData] = useState({
@@ -28,7 +43,7 @@ const SubscriptionForm = () => {
     state: "",
     pincode: "",
     landmark: "",
-    deliveryTime: "morning",
+    slot: "",
     startDate: new Date().toISOString().split('T')[0],
     deliveryInstructions: "",
     paymentMethod: "COD",
@@ -40,18 +55,21 @@ const SubscriptionForm = () => {
       useAndThrowBox: plan?.addOnPrices?.useAndThrowBox || 0,
       eggs: plan?.addOnPrices?.eggs || 0,
       ragiJawa: plan?.addOnPrices?.ragiJawa || 0
-    }
+    },
+    selectedAddressId: "",
+    deliveryCharge: 0
   });
 
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
 
-  // Load user info when component mounts
+  // Load user info and verification status when component mounts
   useEffect(() => {
     if (userInfoStatus === 'idle') {
       dispatch(fetchUserInfo());
     }
+    dispatch(getMyVerificationStatus());
   }, [dispatch, userInfoStatus]);
 
   // Populate form with user info if available
@@ -75,6 +93,28 @@ const SubscriptionForm = () => {
       }));
     }
   }, [userInfo]);
+
+  // Handle address selection from verified addresses
+  const handleAddressSelect = (addressId) => {
+    if (addressId === "new") {
+      navigate("/address"); // Redirect to address page
+      return;
+    }
+
+    const selectedAddress = myVerification?.find(verification => verification._id === addressId);
+    if (selectedAddress) {
+      setFormData(prev => ({
+        ...prev,
+        selectedAddressId: addressId,
+        address: selectedAddress.address.street,
+        area: selectedAddress.address.area,
+        city: selectedAddress.address.city,
+        state: selectedAddress.address.state,
+        pincode: selectedAddress.address.pincode,
+        deliveryCharge: selectedAddress.deliveryCharge || 0
+      }));
+    }
+  };
 
   // Handle input changes
   const handleChange = (e) => {
@@ -102,6 +142,31 @@ const SubscriptionForm = () => {
         [addOnType]: prev.addOnPrices[addOnType] ? 0 : price
       }
     }));
+  };
+
+  // Scroll to the first field with error
+  const scrollToError = (fieldName) => {
+    const refs = {
+      firstName: firstNameRef,
+      lastName: lastNameRef,
+      email: emailRef,
+      phone: phoneRef,
+      address: addressRef,
+      area: areaRef,
+      city: cityRef,
+      state: stateRef,
+      pincode: pincodeRef,
+      startDate: startDateRef,
+      utrNumber: utrNumberRef,
+      terms: termsRef
+    };
+
+    if (refs[fieldName]?.current) {
+      refs[fieldName].current.scrollIntoView({
+        behavior: 'smooth',
+        block: 'center'
+      });
+    }
   };
 
   // Handle form submission
@@ -135,6 +200,9 @@ const SubscriptionForm = () => {
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
+      // Scroll to the first error
+      const firstError = Object.keys(newErrors)[0];
+      scrollToError(firstError);
       return;
     }
 
@@ -146,6 +214,7 @@ const SubscriptionForm = () => {
         fullName: `${formData.firstName} ${formData.lastName}`,
         email: formData.email,
         phone: formData.phone,
+        slot: formData.slot,
         address: {
           street: formData.address,
           area: formData.area,
@@ -153,10 +222,10 @@ const SubscriptionForm = () => {
           state: formData.state,
           pincode: formData.pincode,
           landmark: formData.landmark
-        }
+        },
       };
-
-      await dispatch(updateUserInfo({ userData }));
+      
+      await dispatch(updateUserInfo(userData));
 
       // Then create subscription
       const subscriptionData = {
@@ -166,30 +235,12 @@ const SubscriptionForm = () => {
         paymentProof: formData.paymentMethod === "PhonePe"
           ? { utr: formData.utrNumber }
           : undefined,
-        addOnPrices: formData.addOnPrices
+        addOnPrices: formData.addOnPrices,
+        deliveryCharge: formData.deliveryCharge
       };
 
-      const subscriptionResult = await dispatch(createSubscription(subscriptionData)).unwrap();
+      await dispatch(createSubscription(subscriptionData)).unwrap();
 
-      // Schedule the first delivery
-      // const deliveryData = {
-      //   subscriptionId: subscriptionResult._id,
-      //   deliveryDate: formData.startDate,
-      //   slot: formData.deliveryTime,
-      //   address: {
-      //     street: formData.address,
-      //     area: formData.area,
-      //     city: formData.city,
-      //     state: formData.state,
-      //     pincode: formData.pincode,
-      //     landmark: formData.landmark
-      //   },
-      //   instructions: formData.deliveryInstructions
-      // };
-
-      // await dispatch(scheduleDelivery(deliveryData)).unwrap();
-
-      // Show success message and then navigate
       setShowSuccess(true);
       setTimeout(() => {
         navigate("/me");
@@ -205,7 +256,7 @@ const SubscriptionForm = () => {
   const getTotalPrice = () => {
     const basePrice = formData.productInfo?.basePrice || 0;
     const addOnsTotal = Object.values(formData.addOnPrices).reduce((sum, price) => sum + price, 0);
-    return basePrice + addOnsTotal;
+    return basePrice + addOnsTotal + (formData.deliveryCharge || 0);
   };
 
   if (showSuccess) {
@@ -213,68 +264,47 @@ const SubscriptionForm = () => {
       <div className="pt-24 pb-16">
         <Header />
         <div className="container mx-auto px-4">
-  <div className="max-w-2xl mx-auto bg-white rounded-xl shadow-sm p-8 text-center">
-    <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
-      <svg 
-        className="checkmark animate-draw" 
-        xmlns="http://www.w3.org/2000/svg" 
-        viewBox="0 0 52 52"
-        width="40"
-        height="40"
-      >
-        <circle 
-          className="checkmark-circle" 
-          cx="26" 
-          cy="26" 
-          r="25" 
-          fill="none"
-          stroke="#10B981"
-          strokeWidth="2"
-        />
-        <path 
-          className="checkmark-check" 
-          fill="none" 
-          stroke="#10B981" 
-          strokeWidth="4" 
-          strokeLinecap="round"
-          d="M14.1 27.2l7.1 7.2 16.7-16.8"
-        />
-      </svg>
-    </div>
-    <h2 className="text-2xl font-bold text-gray-800 mb-2">Subscription Successful!</h2>
-    <p className="text-gray-600 mb-6">Your order has been placed successfully.</p>
-    <p className="text-gray-500 text-sm">
-      Redirecting to your account page...
-    </p>
-  </div>
-</div>
-
-<style jsx>{`
-  .checkmark-circle {
-    animation: scale-in 0.3s cubic-bezier(0.25, 0.8, 0.25, 1) both;
-  }
-  
-  .checkmark-check {
-    stroke-dasharray: 48;
-    stroke-dashoffset: 48;
-    animation: stroke 0.5s cubic-bezier(0.65, 0, 0.45, 1) 0.3s forwards;
-  }
-  
-  @keyframes scale-in {
-    0% { transform: scale(0); opacity: 0; }
-    100% { transform: scale(1); opacity: 1; }
-  }
-  
-  @keyframes stroke {
-    100% { stroke-dashoffset: 0; }
-  }
-`}</style>
+          <div className="max-w-2xl mx-auto bg-white rounded-xl shadow-sm p-8 text-center">
+            <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
+              <svg 
+                className="checkmark animate-draw" 
+                xmlns="http://www.w3.org/2000/svg" 
+                viewBox="0 0 52 52"
+                width="40"
+                height="40"
+              >
+                <circle 
+                  className="checkmark-circle" 
+                  cx="26" 
+                  cy="26" 
+                  r="25" 
+                  fill="none"
+                  stroke="#10B981"
+                  strokeWidth="2"
+                />
+                <path 
+                  className="checkmark-check" 
+                  fill="none" 
+                  stroke="#10B981" 
+                  strokeWidth="4" 
+                  strokeLinecap="round"
+                  d="M14.1 27.2l7.1 7.2 16.7-16.8"
+                />
+              </svg>
+            </div>
+            <h2 className="text-2xl font-bold text-gray-800 mb-2">Subscription Successful!</h2>
+            <p className="text-gray-600 mb-6">Your order has been placed successfully.</p>
+            <p className="text-gray-500 text-sm">
+              Redirecting to your account page...
+            </p>
+          </div>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="pt-24 pb-16">
+    <div className="pt-30 pb-16">
       <Header />
       <div className="container mx-auto px-4">
         <div className="text-center mb-10">
@@ -291,7 +321,7 @@ const SubscriptionForm = () => {
           <div className="lg:w-2/3">
             <form onSubmit={handleSubmit}>
               {/* Personal Information */}
-              <div className="bg-white rounded-xl shadow-sm p-6 mb-6">
+              <div className="bg-white rounded-xl shadow-sm p-6 mb-6" ref={firstNameRef}>
                 <h2 className="text-xl font-semibold mb-4 text-gray-800 flex items-center">
                   <span className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center mr-3 text-green-600">
                     1
@@ -310,13 +340,13 @@ const SubscriptionForm = () => {
                       value={formData.firstName}
                       onChange={handleChange}
                       className={`w-full px-4 py-2 rounded-lg border ${errors.firstName ? "border-red-500" : "border-gray-300"} focus:outline-none focus:ring-2 focus:ring-green-500`}
-                      placeholder="John"
+                      placeholder="Enter Your First Name"
                     />
                     {errors.firstName && (
                       <p className="text-red-500 text-xs mt-1">{errors.firstName}</p>
                     )}
                   </div>
-                  <div>
+                  <div ref={lastNameRef}>
                     <label htmlFor="lastName" className="block text-sm font-medium text-gray-700 mb-1">
                       Last Name*
                     </label>
@@ -327,13 +357,13 @@ const SubscriptionForm = () => {
                       value={formData.lastName}
                       onChange={handleChange}
                       className={`w-full px-4 py-2 rounded-lg border ${errors.lastName ? "border-red-500" : "border-gray-300"} focus:outline-none focus:ring-2 focus:ring-green-500`}
-                      placeholder="Doe"
+                      placeholder="Enter Your Last Name"
                     />
                     {errors.lastName && (
                       <p className="text-red-500 text-xs mt-1">{errors.lastName}</p>
                     )}
                   </div>
-                  <div>
+                  <div ref={emailRef}>
                     <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
                       Email Address*
                     </label>
@@ -344,13 +374,13 @@ const SubscriptionForm = () => {
                       value={formData.email}
                       onChange={handleChange}
                       className={`w-full px-4 py-2 rounded-lg border ${errors.email ? "border-red-500" : "border-gray-300"} focus:outline-none focus:ring-2 focus:ring-green-500`}
-                      placeholder="john.doe@example.com"
+                      placeholder="Enter Your mail"
                     />
                     {errors.email && (
                       <p className="text-red-500 text-xs mt-1">{errors.email}</p>
                     )}
                   </div>
-                  <div>
+                  <div ref={phoneRef}>
                     <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1">
                       Phone Number*
                     </label>
@@ -361,7 +391,7 @@ const SubscriptionForm = () => {
                       value={formData.phone}
                       onChange={handleChange}
                       className={`w-full px-4 py-2 rounded-lg border ${errors.phone ? "border-red-500" : "border-gray-300"} focus:outline-none focus:ring-2 focus:ring-green-500`}
-                      placeholder="9876543210"
+                      placeholder="Enter Your Number"
                     />
                     {errors.phone && (
                       <p className="text-red-500 text-xs mt-1">{errors.phone}</p>
@@ -371,7 +401,7 @@ const SubscriptionForm = () => {
               </div>
 
               {/* Delivery Address */}
-              <div className="bg-white rounded-xl shadow-sm p-6 mb-6">
+              <div className="bg-white rounded-xl shadow-sm p-6 mb-6" ref={addressRef}>
                 <h2 className="text-xl font-semibold mb-4 text-gray-800 flex items-center">
                   <span className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center mr-3 text-green-600">
                     2
@@ -379,26 +409,34 @@ const SubscriptionForm = () => {
                   Delivery Address
                 </h2>
                 <div className="space-y-4">
+                  {/* Address dropdown */}
                   <div>
-                    <label htmlFor="address" className="block text-sm font-medium text-gray-700 mb-1">
-                      Street Address*
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Select Verified Address
                     </label>
-                    <input
-                      type="text"
-                      id="address"
-                      name="address"
-                      value={formData.address}
-                      onChange={handleChange}
-                      className={`w-full px-4 py-2 rounded-lg border ${errors.address ? "border-red-500" : "border-gray-300"} focus:outline-none focus:ring-2 focus:ring-green-500`}
-                      placeholder="123 Main Street, Apartment 4B"
-                    />
-                    {errors.address && (
-                      <p className="text-red-500 text-xs mt-1">{errors.address}</p>
-                    )}
+                    <select
+                      value={formData.selectedAddressId}
+                      onChange={(e) => handleAddressSelect(e.target.value)}
+                      className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-green-500"
+                    >
+                      <option value="">Select an address</option>
+                      {myVerification?.filter(v => v.verifydeliverystatus === "approved").length > 0 ? (
+                        myVerification
+                          .filter(v => v.verifydeliverystatus === "approved")
+                          .map((verification) => (
+                            <option key={verification._id} value={verification._id}>
+                              {`${verification.address.street}, ${verification.address.area}, ${verification.address.city} - ${verification.address.pincode}`}
+                            </option>
+                          ))
+                      ) : null}
+                      <option value="new">+ Add New Address</option>
+                    </select>
                   </div>
-                  <div>
+
+                  {/* Address fields */}
+                  {/* <div ref={areaRef}>
                     <label htmlFor="area" className="block text-sm font-medium text-gray-700 mb-1">
-                      Area/Locality*
+                      Area*
                     </label>
                     <input
                       type="text"
@@ -407,14 +445,14 @@ const SubscriptionForm = () => {
                       value={formData.area}
                       onChange={handleChange}
                       className={`w-full px-4 py-2 rounded-lg border ${errors.area ? "border-red-500" : "border-gray-300"} focus:outline-none focus:ring-2 focus:ring-green-500`}
-                      placeholder="Gachibowli"
+                      placeholder="Area/Locality"
                     />
                     {errors.area && (
                       <p className="text-red-500 text-xs mt-1">{errors.area}</p>
                     )}
                   </div>
                   <div className="grid md:grid-cols-2 gap-4">
-                    <div>
+                    <div ref={cityRef}>
                       <label htmlFor="city" className="block text-sm font-medium text-gray-700 mb-1">
                         City*
                       </label>
@@ -425,13 +463,13 @@ const SubscriptionForm = () => {
                         value={formData.city}
                         onChange={handleChange}
                         className={`w-full px-4 py-2 rounded-lg border ${errors.city ? "border-red-500" : "border-gray-300"} focus:outline-none focus:ring-2 focus:ring-green-500`}
-                        placeholder="Hyderabad"
+                        placeholder="City"
                       />
                       {errors.city && (
                         <p className="text-red-500 text-xs mt-1">{errors.city}</p>
                       )}
                     </div>
-                    <div>
+                    <div ref={stateRef}>
                       <label htmlFor="state" className="block text-sm font-medium text-gray-700 mb-1">
                         State*
                       </label>
@@ -442,7 +480,7 @@ const SubscriptionForm = () => {
                         value={formData.state}
                         onChange={handleChange}
                         className={`w-full px-4 py-2 rounded-lg border ${errors.state ? "border-red-500" : "border-gray-300"} focus:outline-none focus:ring-2 focus:ring-green-500`}
-                        placeholder="Telangana"
+                        placeholder="State"
                       />
                       {errors.state && (
                         <p className="text-red-500 text-xs mt-1">{errors.state}</p>
@@ -450,7 +488,7 @@ const SubscriptionForm = () => {
                     </div>
                   </div>
                   <div className="grid md:grid-cols-2 gap-4">
-                    <div>
+                    <div ref={pincodeRef}>
                       <label htmlFor="pincode" className="block text-sm font-medium text-gray-700 mb-1">
                         Pincode*
                       </label>
@@ -461,7 +499,7 @@ const SubscriptionForm = () => {
                         value={formData.pincode}
                         onChange={handleChange}
                         className={`w-full px-4 py-2 rounded-lg border ${errors.pincode ? "border-red-500" : "border-gray-300"} focus:outline-none focus:ring-2 focus:ring-green-500`}
-                        placeholder="500081"
+                        placeholder="6-digit pincode"
                       />
                       {errors.pincode && (
                         <p className="text-red-500 text-xs mt-1">{errors.pincode}</p>
@@ -478,81 +516,100 @@ const SubscriptionForm = () => {
                         value={formData.landmark}
                         onChange={handleChange}
                         className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-green-500"
-                        placeholder="Near Apollo Hospital"
+                        placeholder="Nearby landmark"
                       />
                     </div>
-                  </div>
+                  </div> */}
                 </div>
               </div>
 
-            {/* Delivery Preferences */}
-<div className="bg-white rounded-xl shadow-sm p-6 mb-6">
-  <h2 className="text-xl font-semibold mb-4 text-gray-800 flex items-center">
-    <span className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center mr-3 text-green-600">
-      3
-    </span>
-    Delivery Preferences
-  </h2>
-  <div className="space-y-6">
-    <div>
-      <label className="block text-sm font-medium text-gray-700 mb-3">
-        Preferred Delivery Time
-      </label>
-      <div className="flex space-x-4">
-        <div
-          className={`flex-1 border rounded-lg p-4 cursor-pointer transition-all ${formData.deliveryTime === "morning" ? "border-green-500 bg-green-50" : "border-gray-200 hover:border-gray-300"}`}
-          onClick={() => setFormData({...formData, deliveryTime: "morning"})}
-        >
-          <div className="flex items-center">
-            <div className={`w-5 h-5 rounded-full border flex items-center justify-center ${formData.deliveryTime === "morning" ? "border-green-500" : "border-gray-300"}`}>
-              {formData.deliveryTime === "morning" && (
-                <div className="w-3 h-3 rounded-full bg-green-500"></div>
-              )}
-            </div>
-            <div className="ml-3">
-              <h3 className="font-medium">Morning</h3>
-              <p className="text-sm text-gray-500">6:00 AM - 9:00 AM</p>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-    <div>
-      <label htmlFor="startDate" className="block text-sm font-medium text-gray-700 mb-1">
-        Start Date*
-      </label>
-      <input
-        type="date"
-        id="startDate"
-        name="startDate"
-        value={formData.startDate}
-        onChange={handleChange}
-        min={new Date().toISOString().split("T")[0]}
-        className={`w-full px-4 py-2 rounded-lg border ${errors.startDate ? "border-red-500" : "border-gray-300"} focus:outline-none focus:ring-2 focus:ring-green-500`}
-      />
-      {errors.startDate && (
-        <p className="text-red-500 text-xs mt-1">{errors.startDate}</p>
-      )}
-      <p className="text-sm text-gray-500 mt-1">
-        We deliver Monday through Saturday (No delivery on Sundays and major festivals)
-      </p>
-    </div>
-    <div>
-      <label htmlFor="deliveryInstructions" className="block text-sm font-medium text-gray-700 mb-1">
-        Delivery Instructions (Optional)
-      </label>
-      <textarea
-        id="deliveryInstructions"
-        name="deliveryInstructions"
-        value={formData.deliveryInstructions}
-        onChange={handleChange}
-        rows={3}
-        className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-green-500"
-        placeholder="E.g., Leave at the door, call when arriving, etc."
-      ></textarea>
-    </div>
-  </div>
-</div>
+              {/* Delivery Preferences */}
+              <div className="bg-white rounded-xl shadow-sm p-6 mb-6" ref={startDateRef}>
+                <h2 className="text-xl font-semibold mb-4 text-gray-800 flex items-center">
+                  <span className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center mr-3 text-green-600">
+                    3
+                  </span>
+                  Delivery Preferences
+                </h2>
+                <div className="space-y-6">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-3">
+                      Preferred Delivery Time
+                    </label>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {/* First Morning Slot (6-8 AM) */}
+                      <div
+                        className={`border rounded-lg p-4 cursor-pointer transition-all ${formData.slot === "morning 6Am - 8Am" ? "border-green-500 bg-green-50" : "border-gray-200 hover:border-gray-300"}`}
+                        onClick={() => setFormData({...formData, slot: "morning 6Am - 8Am"})}
+                      >
+                        <div className="flex items-center">
+                          <div className={`w-5 h-5 rounded-full border flex items-center justify-center ${formData.slot === "morning 6Am - 8Am" ? "border-green-500" : "border-gray-300"}`}>
+                            {formData.slot === "morning 6Am - 8Am" && (
+                              <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                            )}
+                          </div>
+                          <div className="ml-3">
+                            <h3 className="font-medium">Early Morning</h3>
+                            <p className="text-sm text-gray-500">6:00 AM - 8:00 AM</p>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Second Morning Slot (8-10 AM) */}
+                      <div
+                        className={`border rounded-lg p-4 cursor-pointer transition-all ${formData.slot === "morning 8Am - 10Am" ? "border-green-500 bg-green-50" : "border-gray-200 hover:border-gray-300"}`}
+                        onClick={() => setFormData({...formData, slot: "morning 8Am - 10Am"})}
+                      >
+                        <div className="flex items-center">
+                          <div className={`w-5 h-5 rounded-full border flex items-center justify-center ${formData.slot === "morning 8Am - 10Am" ? "border-green-500" : "border-gray-300"}`}>
+                            {formData.slot === "morning 8Am - 10Am" && (
+                              <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                            )}
+                          </div>
+                          <div className="ml-3">
+                            <h3 className="font-medium">Morning</h3>
+                            <p className="text-sm text-gray-500">8:00 AM - 10:00 AM</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div>
+                    <label htmlFor="startDate" className="block text-sm font-medium text-gray-700 mb-1">
+                      Start Date*
+                    </label>
+                    <input
+                      type="date"
+                      id="startDate"
+                      name="startDate"
+                      value={formData.startDate}
+                      onChange={handleChange}
+                      min={new Date().toISOString().split("T")[0]}
+                      className={`w-full px-4 py-2 rounded-lg border ${errors.startDate ? "border-red-500" : "border-gray-300"} focus:outline-none focus:ring-2 focus:ring-green-500`}
+                    />
+                    {errors.startDate && (
+                      <p className="text-red-500 text-xs mt-1">{errors.startDate}</p>
+                    )}
+                    <p className="text-sm text-gray-500 mt-1">
+                      We deliver Monday through Saturday (No delivery on Sundays and major festivals)
+                    </p>
+                  </div>
+                  <div>
+                    <label htmlFor="deliveryInstructions" className="block text-sm font-medium text-gray-700 mb-1">
+                      Delivery Instructions (Optional)
+                    </label>
+                    <textarea
+                      id="deliveryInstructions"
+                      name="deliveryInstructions"
+                      value={formData.deliveryInstructions}
+                      onChange={handleChange}
+                      rows={3}
+                      className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-green-500"
+                      placeholder="E.g., Leave at the door, call when arriving, etc."
+                    ></textarea>
+                  </div>
+                </div>
+              </div>
 
               {/* Add-ons Section */}
               <div className="bg-white rounded-xl shadow-sm p-6 mb-6">
@@ -620,7 +677,7 @@ const SubscriptionForm = () => {
               </div>
 
               {/* Payment Method */}
-              <div className="bg-white rounded-xl shadow-sm p-6 mb-6">
+              <div className="bg-white rounded-xl shadow-sm p-6 mb-6" ref={utrNumberRef}>
                 <h2 className="text-xl font-semibold mb-4 text-gray-800 flex items-center">
                   <span className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center mr-3 text-green-600">
                     5
@@ -698,7 +755,7 @@ const SubscriptionForm = () => {
               </div>
 
               {/* Terms and Conditions */}
-              <div className="mb-6">
+              <div className="mb-6" ref={termsRef}>
                 <div className="flex items-start">
                   <div className="flex items-center h-5">
                     <input
@@ -789,6 +846,14 @@ const SubscriptionForm = () => {
                   </div>
                 )}
               </div>
+
+              {/* Delivery Charges */}
+              {formData.deliveryCharge > 0 && (
+                <div className="flex justify-between border-b border-gray-200 pb-4 mb-4">
+                  <span className="text-gray-600">Delivery Charges:</span>
+                  <span className="font-medium">+₹{formData.deliveryCharge.toLocaleString()}</span>
+                </div>
+              )}
               
               <div className="flex justify-between items-center text-lg font-semibold">
                 <span>Total:</span>
@@ -810,10 +875,10 @@ const SubscriptionForm = () => {
                         <i className="fas fa-check text-green-600 mt-1 mr-2"></i>
                         <span>No repetition of fruits in the same week</span>
                       </li>
-                      <li className="flex items-start">
+                      {/* <li className="flex items-start">
                         <i className="fas fa-check text-green-600 mt-1 mr-2"></i>
                         <span>Pause or modify subscription anytime</span>
-                      </li>
+                      </li> */}
                     </ul>
                   </div>
                 </div>

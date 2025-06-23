@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { FaPhone, FaTimes, FaBars, FaUser, FaSignOutAlt, FaBoxOpen, FaUserShield, FaTruck } from "react-icons/fa";
+import { FaPhone, FaTimes, FaBars, FaUser, FaSignOutAlt, FaBoxOpen, FaUserShield, FaTruck, FaMapMarkerAlt } from "react-icons/fa";
 import { useSelector, useDispatch } from "react-redux";
 import { logout } from "../Redux/Slices/userSlice.js";
 import { useNavigate, useLocation, Link } from "react-router-dom";
@@ -64,12 +64,17 @@ const Header = () => {
   };
 
   const goToAdminDashboard = () => {
-    navigate('/admin-subscription');
+    navigate('/admin-dashboard');
     setIsMenuOpen(false);
   };
 
   const goToDeliveries = () => {
     navigate('/manage-delivery');
+    setIsMenuOpen(false);
+  };
+
+  const goToAddresses = () => {
+    navigate('/address');
     setIsMenuOpen(false);
   };
 
@@ -96,7 +101,7 @@ const Header = () => {
               className="h-12 w-12 rounded-full object-cover border-2 border-yellow-400 shadow-md hover:scale-105 transition-transform duration-300"
             />
             <span className="ml-2 font-bold text-xl">
-              <span className="text-blue-600">7 Star</span>
+              <span className="text-green-800">7 Star</span>
               <span className="text-yellow-500"> Fruit Box</span>
             </span>
           </Link>
@@ -127,6 +132,15 @@ const Header = () => {
                 className="flex items-center text-gray-800 hover:text-green-700 transition-colors duration-200 font-medium text-sm uppercase tracking-wider"
               >
                 <FaBoxOpen className="mr-2" /> My Plans
+              </button>
+            )}
+            
+            {userInfo && (
+              <button
+                onClick={goToAddresses}
+                className="flex items-center text-gray-800 hover:text-green-700 transition-colors duration-200 font-medium text-sm uppercase tracking-wider"
+              >
+                <FaMapMarkerAlt className="mr-2" /> My Addresses
               </button>
             )}
             
@@ -225,6 +239,15 @@ const Header = () => {
                     className="flex items-center text-gray-800 hover:text-green-700 py-2 font-medium text-sm uppercase tracking-wider"
                   >
                     <FaBoxOpen className="mr-2" /> My Plans
+                  </button>
+                )}
+                
+                {userInfo && (
+                  <button
+                    onClick={goToAddresses}
+                    className="flex items-center text-gray-800 hover:text-green-700 py-2 font-medium text-sm uppercase tracking-wider"
+                  >
+                    <FaMapMarkerAlt className="mr-2" /> My Addresses
                   </button>
                 )}
                 
