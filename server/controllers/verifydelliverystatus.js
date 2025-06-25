@@ -142,15 +142,14 @@ export const getAllVerifications = async (req, res) => {
 // PATCH /api/verifydelivery/update
 export const updateVerificationStatus = async (req, res) => {
   try {
-    const { verificationId, status, deliveryCharge } = req.body;
+    const { verificationId, status, deliveryCharge, area } = req.body;
 
-    /* ─────────── 1. Basic validation ─────────── */
-    // 1‑a. Validate status (if present)
+    // Validate status
     if (status && !['approved', 'not-deliverable', 'pending'].includes(status)) {
       return res.status(400).json({ message: 'Invalid status value' });
     }
 
-    // 1‑b. Validate deliveryCharge (if present)
+    // Validate deliveryCharge
     if (deliveryCharge !== undefined) {
       const parsedCharge = Number(deliveryCharge);
       if (Number.isNaN(parsedCharge) || parsedCharge < 0) {
@@ -158,17 +157,22 @@ export const updateVerificationStatus = async (req, res) => {
       }
     }
 
-    /* ─────────── 2. Build dynamic update object ─────────── */
+    // Build update object
     const updateObj = {};
     if (status) updateObj.verifydeliverystatus = status;
     if (deliveryCharge !== undefined) updateObj.deliveryCharge = deliveryCharge;
 
-    // Nothing to update?
+    // Correct way to update nested address.area
+    if (area) {
+      updateObj.$set = updateObj.$set || {};
+      updateObj.$set["address.area"] = area;
+    }
+
     if (Object.keys(updateObj).length === 0) {
       return res.status(400).json({ message: 'Nothing to update' });
     }
 
-    /* ─────────── 3. Apply update ─────────── */
+    // Apply update
     const verification = await verifydelivery
       .findByIdAndUpdate(verificationId, updateObj, { new: true })
       .populate('user', 'name email phone');
@@ -177,11 +181,11 @@ export const updateVerificationStatus = async (req, res) => {
       return res.status(404).json({ message: 'Verification not found' });
     }
 
-    /* ─────────── 4. Respond ─────────── */
     res.status(200).json({
       message: 'Verification record updated successfully',
       data: verification,
     });
+
   } catch (error) {
     res.status(500).json({
       message: 'Error updating verification record',
@@ -189,6 +193,7 @@ export const updateVerificationStatus = async (req, res) => {
     });
   }
 };
+
 
 
 // Get verification by ID

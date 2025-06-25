@@ -94,7 +94,7 @@ export const getAllVerifications = createAsyncThunk(
 // Update verification status (admin)
 export const updateVerificationStatus = createAsyncThunk(
   'verifyDelivery/updateStatus',
-  async ({ verificationId, status,deliveryCharge}, { getState, rejectWithValue }) => {
+  async ({ verificationId, status,deliveryCharge,area }, { getState, rejectWithValue }) => {
     try {
       const { user } = getState();
       const config = {
@@ -103,10 +103,10 @@ export const updateVerificationStatus = createAsyncThunk(
           Authorization: `Bearer ${user.userInfo.token}`,
         },
       };
-
+        console.log("data d=froomm the fron end",verificationId, status,deliveryCharge,area)
       const { data } = await axios.put(
         `${API_URL}/aadmin-deliverable`,
-        { status,verificationId,deliveryCharge},
+        { status,verificationId,deliveryCharge, area},
         config
       );
       return data;

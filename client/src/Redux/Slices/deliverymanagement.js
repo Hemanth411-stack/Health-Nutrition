@@ -1,4 +1,3 @@
-// deliverySlice.js
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axios from 'axios';
 
@@ -11,15 +10,14 @@ export const fetchAllDeliveries = createAsyncThunk(
   async (_, { getState, rejectWithValue }) => {
     try {
       const state = getState();
-      const token = state.user?.userInfo?.token;
+      const token = state.deliveryBoyAuth.token;
 
-      const response = await axios.get(`${API_URL}/admin/all`, {
+      const response = await axios.get(`${API_URL}/deliveryboi-address`, {
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
       });
-
       return response.data;
     } catch (err) {
       return rejectWithValue(
@@ -34,7 +32,7 @@ export const updateDeliveryStatus = createAsyncThunk(
   async ({ deliveryId, status }, { getState, rejectWithValue }) => {
     try {
       const state = getState();
-      const token = state.user?.userInfo?.token;
+      const token = state.deliveryBoyAuth.token;
 
       const response = await axios.put(
         `${API_URL}/status`,
@@ -58,7 +56,6 @@ export const updateDeliveryStatus = createAsyncThunk(
     }
   }
 );
-
 
 // Initial State
 const initialState = {
@@ -90,14 +87,15 @@ const deliverymanagementSlice = createSlice({
       })
       .addCase(fetchAllDeliveries.fulfilled, (state, action) => {
         state.loading = false;
-        state.deliveries = action.payload;
+        state.deliveries = action.payload.deliveries || [];
+        console.log("deliveries",action.payload.deliveries)
         state.lastUpdated = new Date().toISOString();
       })
       .addCase(fetchAllDeliveries.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload?.message || 'Failed to fetch deliveries';
+        state.error = action.payload || 'Failed to fetch deliveries';
       })
-      
+
       // Update Delivery Status
       .addCase(updateDeliveryStatus.pending, (state) => {
         state.updateLoading = true;
@@ -113,7 +111,7 @@ const deliverymanagementSlice = createSlice({
       })
       .addCase(updateDeliveryStatus.rejected, (state, action) => {
         state.updateLoading = false;
-        state.updateError = action.payload?.message || 'Failed to update delivery status';
+        state.updateError = action.payload || 'Failed to update delivery status';
       });
   }
 });

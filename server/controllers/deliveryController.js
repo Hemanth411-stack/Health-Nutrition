@@ -195,5 +195,3 @@ export const updateDeliveryStatus = async (req, res) => {
     return res.status(500).json({ message: 'Error updating delivery', error: err.message });
   }
 };
-
-

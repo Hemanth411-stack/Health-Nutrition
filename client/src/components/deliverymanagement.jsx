@@ -1,12 +1,16 @@
 import React, { useEffect } from 'react';
-import { FaTruck, FaCalendarAlt, FaMapMarkerAlt, FaCheck, FaTimes, FaExclamation } from 'react-icons/fa';
+import { FaTruck,FaSignOutAlt , FaSignInAlt ,FaCalendarAlt, FaMapMarkerAlt, FaCheck, FaTimes, FaExclamation } from 'react-icons/fa';
 import { useDispatch, useSelector } from 'react-redux';
+import {selectDeliveryBoyToken} from '../Redux/Slices/deliveryboi'
+import { Link } from 'react-router-dom';
 import {
   fetchAllDeliveries,
   updateDeliveryStatus,
   clearDeliveryErrors
-} from '../Redux/Slices/deliverymanagement.js';
+} from '../Redux/Slices/deliverymanagement';
 import { useState } from 'react';
+import {logout} from "../Redux/Slices/deliveryboi"
+import { useNavigate } from 'react-router-dom';
 
 const DeliveryManagement = () => {
   const dispatch = useDispatch();
@@ -17,9 +21,11 @@ const DeliveryManagement = () => {
     updateLoading,
     updateError
   } = useSelector(state => state.deliveriesmanagement);
+const navigate = useNavigate();
 
   const [filter, setFilter] = useState('all');
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+    const token = useSelector(selectDeliveryBoyToken);
 
   // Fetch deliveries on component mount and when selectedDate changes
   useEffect(() => {
@@ -32,6 +38,12 @@ const DeliveryManagement = () => {
       dispatch(clearDeliveryErrors());
     };
   }, [dispatch]);
+const handleLogout = () => {
+  dispatch(logout()); // clears user from Redux
+  setTimeout(() => {
+    navigate('/login-deliverboi');
+  }, 100); // slight delay gives time for unmount/cleanup
+};
 
   const filteredDeliveries = deliveries.filter(delivery => {
     const matchesFilter = filter === 'all' || delivery.status === filter;
@@ -58,31 +70,50 @@ const DeliveryManagement = () => {
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <header className="bg-white shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8 flex justify-between items-center">
-          <h1 className="text-2xl font-bold text-gray-900">
-            <FaTruck className="inline mr-2" />
-            Delivery Management
-          </h1>
-          <div className="flex items-center space-x-4">
-            <input
-              type="date"
-              value={selectedDate}
-              onChange={(e) => setSelectedDate(e.target.value)}
-              className="border rounded-md px-3 py-2 text-sm"
-            />
-            <select
-              value={filter}
-              onChange={(e) => setFilter(e.target.value)}
-              className="border rounded-md px-3 py-2 text-sm"
+      <div className="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8 flex justify-between items-center">
+        <h1 className="text-2xl font-bold text-gray-900">
+          <FaTruck className="inline mr-2" />
+          Delivery Management
+        </h1>
+        <div className="flex items-center space-x-4">
+          <input
+            type="date"
+            value={selectedDate}
+            onChange={(e) => setSelectedDate(e.target.value)}
+            className="border rounded-md px-3 py-2 text-sm"
+          />
+          <select
+            value={filter}
+            onChange={(e) => setFilter(e.target.value)}
+            className="border rounded-md px-3 py-2 text-sm"
+          >
+            <option value="all">All Deliveries</option>
+            <option value="pending">Pending</option>
+            <option value="delivered">Delivered</option>
+            <option value="missed">Missed</option>
+          </select>
+
+          {/* Conditional rendering based on authentication */}
+          {token ? (
+            <button
+              onClick={handleLogout}
+              className="flex items-center space-x-1 text-sm font-medium text-red-600 hover:text-red-800"
             >
-              <option value="all">All Deliveries</option>
-              <option value="pending">Pending</option>
-              <option value="delivered">Delivered</option>
-              <option value="missed">Missed</option>
-            </select>
-          </div>
+              <FaSignOutAlt className="inline mr-1" />
+              Logout
+            </button>
+          ) : (
+            <Link
+              to="/login-deliverboi" // Update with your login route
+              className="flex items-center space-x-1 text-sm font-medium text-blue-600 hover:text-blue-800"
+            >
+              <FaSignInAlt className="inline mr-1" />
+              Sign In
+            </Link>
+          )}
         </div>
-      </header>
+      </div>
+    </header>
 
       {/* Error Messages */}
       {error && (
@@ -136,11 +167,11 @@ const DeliveryManagement = () => {
                       </div>
                       <div>
                         <h3 className="text-lg font-medium text-gray-900">
-                          {delivery.user?.name || 'Unknown User'}
+                          {delivery.userInfo?.fullName || 'Unknown User'}
                         </h3>
-                        {/* <p className="text-sm text-gray-500">
-                          {delivery.subscription?.name || 'Unknown Subscription'}
-                        </p> */}
+                        <p className="text-sm text-gray-500">
+                          {delivery.userInfo?.phone || 'No phone number'}
+                        </p>
                       </div>
                     </div>
                     <div className="flex items-center space-x-2">
@@ -173,7 +204,7 @@ const DeliveryManagement = () => {
                           {new Date(delivery.deliveryDate).toLocaleDateString()}
                         </p>
                         <p className="text-sm text-gray-500">
-                          {delivery.slot === 'morning 6Am - 8Am' ? 'Morning (6AM-8AM)' : 'morning (8AM-10AM)'}
+                          {delivery.slot === 'morning 6Am - 8Am' ? 'Morning (6AM-8AM)' : 'Morning (8AM-10AM)'}
                           {delivery.isFestivalOrSunday && ' (Holiday Delivery)'}
                         </p>
                       </div>

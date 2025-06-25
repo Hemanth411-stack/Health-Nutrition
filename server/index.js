@@ -19,6 +19,7 @@ app.use('/api/subscriptions', subscriptionRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/deliveries', deliveryRoutes);
 app.use('/api/userinfo', userInfoRoutes);
+app.use('/api/deliveryboi', deliveryRoutes);
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

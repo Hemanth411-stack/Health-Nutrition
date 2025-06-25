@@ -12,6 +12,8 @@ import CancellationMessages from "./components/CancellationMessages.jsx"
 import AddressManagement from "./components/address.jsx"
 import DeliveryVerificationDashboard from "./components/admindeliveryverification.jsx"
 import AdminDashboard from "./components/admindashboard.jsx"
+import DeliveryBoyRegister from "./components/deliveryboiregister.jsx"
+import DeliveryBoyLogin from "./components/deliveryboilogin.jsx"
 
 
 function App() {
@@ -34,7 +36,8 @@ function App() {
         <Route path="/address" element={<AddressManagement/>}></Route>
         <Route path="/admin-address-verification" element={<DeliveryVerificationDashboard/>}></Route>
         <Route path="/admin-dashboard" element={<AdminDashboard/>}></Route>
-     
+        <Route path="/delivery-boi-register" element={<DeliveryBoyRegister/>}></Route>
+        <Route path="/login-deliverboi" element={<DeliveryBoyLogin/>}></Route>
     </Routes>
     </>
   )
