@@ -60,7 +60,7 @@ const Footer = () => {
           <div className="space-y-5">
             <h3 className="text-xl font-bold text-white mb-4 flex items-center">
               <FaMapMarkerAlt className="mr-2 text-green-400" />
-              Service Areas
+              Free Delivery
             </h3>
             <div className="grid grid-cols-2 gap-4">
               {['HITEC City', 'Gachibowli', 'Madhapur', 'Kukatpally', 'Yusufguda', 'Ameerpet', 'Banjara Hills', 'Jubilee Hills'].map((area) => (
