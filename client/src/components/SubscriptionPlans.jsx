@@ -72,7 +72,7 @@ const SubscriptionPlans = () => {
       id: 'ragiJawa',
       name: 'Ragi Jawa',
       price: 600,
-      description: '250ml daily (₹13/day)',
+      description: '',
       icon: (
         <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-amber-600" viewBox="0 0 20 20" fill="currentColor">
           <path d="M6 8a1 1 0 100-2 1 1 0 000 2zM9 10a1 1 0 100-2 1 1 0 000 2zM12 7a1 1 0 100-2 1 1 0 000 2zM15 9a1 1 0 100-2 1 1 0 000 2z" />
@@ -160,6 +160,11 @@ const SubscriptionPlans = () => {
         {/* Header with dynamic color */}
         <div className={`${colorScheme.bg} text-white py-6 px-6`}>
           <h3 className="text-2xl font-bold">{plan.name}</h3>
+          <span className="text-sm font-bold bg-opacity-20 py-1 rounded-full">
+          {plan.name === "Family Pack" ? "570gm" : 
+          plan.name === "Bachelor Pack" ? "400gm" : 
+          plan.name === "Kid box" ? "150gm" : ""}
+          </span>
           <div className="flex items-end mt-2">
             <span className="text-3xl font-bold">₹{plan.price}</span>
             <span className={`ml-2 ${colorScheme.text}`}>/month</span>
@@ -175,7 +180,7 @@ const SubscriptionPlans = () => {
                     {addon.icon}
                   </div>
                   <div>
-                    <h4 className="font-semibold">{addon.name}</h4>
+                    <h4 className="font-semibold">{addon.name} </h4>
                     <p className="text-gray-600 text-sm">{addon.description}</p>
                   </div>
                 </div>

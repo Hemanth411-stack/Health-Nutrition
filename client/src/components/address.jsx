@@ -177,7 +177,7 @@ const AddressManagement = () => {
                       }}
                       className="text-gray-400 hover:text-orange-500 ml-2"
                     >
-                      <FiChevronRight size={20} />
+                      {/* <FiChevronRight size={20} /> */}
                     </button>
                   </div>
                 </div>
