@@ -132,7 +132,7 @@ const Footer = () => {
             <div className="mt-6">
               <h4 className="font-medium text-white mb-3">Payment Methods</h4>
               <div className="flex flex-wrap gap-2">
-                {['Visa', 'Mastercard', 'UPI', 'Net Banking', 'COD'].map((method) => (
+                {['UPI', 'COD'].map((method) => (
                   <span 
                     key={method}
                     className="bg-gray-800 px-3 py-1 rounded text-sm"
