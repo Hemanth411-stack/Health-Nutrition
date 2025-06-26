@@ -87,9 +87,9 @@ const Footer = () => {
                 { name: 'Why Choose Us', href: '#why-us' },
                 { name: 'Benefits', href: '#benefits' },
                 { name: 'Testimonials', href: '#testimonials' },
-                { name: 'FAQs', href: '/faq' },
-                { name: 'Terms & Conditions', href: '/terms' },
-                { name: 'Privacy Policy', href: '/privacy' },
+                { name: 'FAQs', href: '#plans' },
+                { name: 'Terms & Conditions', href: '' },
+                { name: 'Privacy Policy', href: '' },
               ].map((link) => (
                 <li key={link.name}>
                   <a
@@ -127,12 +127,12 @@ const Footer = () => {
               </div>
             </form>
             <p className="text-xs text-gray-500 mt-2">
-              We respect your privacy. Unsubscribe at any time.
+              We respect your privacy.
             </p>
             <div className="mt-6">
               <h4 className="font-medium text-white mb-3">Payment Methods</h4>
               <div className="flex flex-wrap gap-2">
-                {['UPI', 'COD'].map((method) => (
+                {['UPI', 'COD','PAYTM','PHONEPE','GOOGLEPAY','OR'].map((method) => (
                   <span 
                     key={method}
                     className="bg-gray-800 px-3 py-1 rounded text-sm"

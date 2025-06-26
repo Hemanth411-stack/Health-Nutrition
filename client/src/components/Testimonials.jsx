@@ -8,23 +8,23 @@ const Testimonials = () => {
   const testimonials = [
     {
       quote: "The fruits are always fresh and the variety is amazing! My family loves the surprise element every day.",
-      name: "Sarah Johnson",
+      name: "Hemanth",
       rating: 5,
     },
     {
       quote: "Best subscription service I've tried. The fruits are handpicked and the packaging is eco-friendly.",
-      name: "Michael Chen",
+      name: "Rahul",
       rating: 5,
     },
     {
       quote: "I love that I don't have to worry about buying fruits anymore. 7Star delivers quality consistently!",
-      name: "Priya Sharma",
+      name: "vanshika",
       rating: 4,
     },
   ];
 
   return (
-    <section id="testimonials" className="py-20 bg-white">
+    <section id="testimonials" className="py-27 bg-white">
       <div className="container mx-auto px-4">
         <div className="text-center mb-16">
           <h2 className="text-3xl md:text-4xl font-bold text-gray-800 mb-4">
