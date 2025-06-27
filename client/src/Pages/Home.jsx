@@ -13,9 +13,8 @@ import { FaArrowUp } from 'react-icons/fa';
 
 const Home = () => {
   const [showScrollButton, setShowScrollButton] = useState(false);
-
-  useEffect(() => {
-    // Confetti effect
+useEffect(() => {
+  const timer = setTimeout(() => {
     confetti({
       particleCount: 500,
       spread: 200,
@@ -28,19 +27,25 @@ const Home = () => {
       colors: ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff'],
       scalar: 1,
     });
+  }, 500); // delay to ensure DOM is mounted
 
-    // Scroll event listener
-    const handleScroll = () => {
-      if (window.scrollY > 300) {
-        setShowScrollButton(true);
-      } else {
-        setShowScrollButton(false);
-      }
-    };
+  const handleScroll = () => {
+    if (window.scrollY > 300) {
+      setShowScrollButton(true);
+    } else {
+      setShowScrollButton(false);
+    }
+  };
 
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+  window.addEventListener('scroll', handleScroll);
+
+  return () => {
+    clearTimeout(timer);
+    window.removeEventListener('scroll', handleScroll);
+  };
+}, []);
+
+
 
   const scrollToTop = () => {
     window.scrollTo({
