@@ -14,7 +14,7 @@ const FruitBoxGuidelines = () => {
     {
       icon: <CalendarDaysIcon className="h-6 w-6 text-green-600" />,
       title: "Delivery Days",
-      description: "Deliveries are made Monday to Saturday only. Sundays and Government Holidays are excluded."
+      description: "Deliveries are made Monday to Saturday only. Sundays are excluded."
     },
     {
       icon: <PhoneXMarkIcon className="h-6 w-6 text-green-600" />,

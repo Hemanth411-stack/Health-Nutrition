@@ -434,92 +434,8 @@ const SubscriptionForm = () => {
                   </div>
 
                   {/* Address fields */}
-                  {/* <div ref={areaRef}>
-                    <label htmlFor="area" className="block text-sm font-medium text-gray-700 mb-1">
-                      Area*
-                    </label>
-                    <input
-                      type="text"
-                      id="area"
-                      name="area"
-                      value={formData.area}
-                      onChange={handleChange}
-                      className={`w-full px-4 py-2 rounded-lg border ${errors.area ? "border-red-500" : "border-gray-300"} focus:outline-none focus:ring-2 focus:ring-green-500`}
-                      placeholder="Area/Locality"
-                    />
-                    {errors.area && (
-                      <p className="text-red-500 text-xs mt-1">{errors.area}</p>
-                    )}
-                  </div>
-                  <div className="grid md:grid-cols-2 gap-4">
-                    <div ref={cityRef}>
-                      <label htmlFor="city" className="block text-sm font-medium text-gray-700 mb-1">
-                        City*
-                      </label>
-                      <input
-                        type="text"
-                        id="city"
-                        name="city"
-                        value={formData.city}
-                        onChange={handleChange}
-                        className={`w-full px-4 py-2 rounded-lg border ${errors.city ? "border-red-500" : "border-gray-300"} focus:outline-none focus:ring-2 focus:ring-green-500`}
-                        placeholder="City"
-                      />
-                      {errors.city && (
-                        <p className="text-red-500 text-xs mt-1">{errors.city}</p>
-                      )}
-                    </div>
-                    <div ref={stateRef}>
-                      <label htmlFor="state" className="block text-sm font-medium text-gray-700 mb-1">
-                        State*
-                      </label>
-                      <input
-                        type="text"
-                        id="state"
-                        name="state"
-                        value={formData.state}
-                        onChange={handleChange}
-                        className={`w-full px-4 py-2 rounded-lg border ${errors.state ? "border-red-500" : "border-gray-300"} focus:outline-none focus:ring-2 focus:ring-green-500`}
-                        placeholder="State"
-                      />
-                      {errors.state && (
-                        <p className="text-red-500 text-xs mt-1">{errors.state}</p>
-                      )}
-                    </div>
-                  </div>
-                  <div className="grid md:grid-cols-2 gap-4">
-                    <div ref={pincodeRef}>
-                      <label htmlFor="pincode" className="block text-sm font-medium text-gray-700 mb-1">
-                        Pincode*
-                      </label>
-                      <input
-                        type="text"
-                        id="pincode"
-                        name="pincode"
-                        value={formData.pincode}
-                        onChange={handleChange}
-                        className={`w-full px-4 py-2 rounded-lg border ${errors.pincode ? "border-red-500" : "border-gray-300"} focus:outline-none focus:ring-2 focus:ring-green-500`}
-                        placeholder="6-digit pincode"
-                      />
-                      {errors.pincode && (
-                        <p className="text-red-500 text-xs mt-1">{errors.pincode}</p>
-                      )}
-                    </div>
-                    <div>
-                      <label htmlFor="landmark" className="block text-sm font-medium text-gray-700 mb-1">
-                        Landmark (Optional)
-                      </label>
-                      <input
-                        type="text"
-                        id="landmark"
-                        name="landmark"
-                        value={formData.landmark}
-                        onChange={handleChange}
-                        className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-green-500"
-                        placeholder="Nearby landmark"
-                      />
-                    </div>
-                  </div> */}
+
+
                 </div>
               </div>
 
@@ -711,14 +627,47 @@ const SubscriptionForm = () => {
                           <div className="w-3 h-3 rounded-full bg-green-500"></div>
                         )}
                       </div>
-                      <div className="ml-3 flex items-center">
-                        <img 
-                          src="https://static.vecteezy.com/system/resources/previews/049/116/753/non_2x/phonepe-app-icon-transparent-background-free-png.png"
-                          alt="PhonePe" 
-                          className="w-9 h-9 mr-2"
-                        />
-                        <span>PhonePe: 897822735</span>
-                      </div>
+                      <div className="ml-3 space-y-2">
+  {/* Payment Method Icons */}
+  <div className="flex items-center space-x-4">
+    <img
+      src="https://static.vecteezy.com/system/resources/previews/049/116/753/non_2x/phonepe-app-icon-transparent-background-free-png.png"
+      alt="PhonePe"
+      className="w-8 h-8"
+      title="PhonePe"
+    />
+    <img
+      src="https://cdn.iconscout.com/icon/free/png-256/free-paytm-logo-icon-download-in-svg-png-gif-file-formats--online-payment-brand-logos-pack-icons-226448.png?f=webp"
+      alt="Paytm"
+      className="w-8 h-8"
+      title="Paytm"
+    />
+    <img
+      src="https://1000logos.net/wp-content/uploads/2023/03/Google-Pay-logo.png"
+      alt="Google Pay"
+      className="w-17 h-15"
+      title="Google Pay"
+    />
+{/*     <img */}
+{/*       src="https://upload.wikimedia.org/wikipedia/commons/thumb/b/b5/Amazon_Pay_logo.svg/1024px-Amazon_Pay_logo.svg.png" */}
+{/*       alt="Amazon Pay" */}
+{/*       className="w-8 h-8" */}
+{/*       title="Amazon Pay" */}
+{/*     /> */}
+  </div>
+
+  {/* Payment Numbers */}
+  <div className="text-sm space-y-1">
+    <div className="flex items-center">
+      <span className="font-medium">Paytm/GPay/phonepe :</span>
+      <span className="ml-2">897822735</span>
+    </div>
+    <div className="flex items-center">
+      <span className="font-medium">Paytm/GPay/phonepe :</span>
+      <span className="ml-2">8790089089</span>
+    </div>
+  </div>
+</div>
                     </div>
                   </div>
                   
@@ -726,7 +675,7 @@ const SubscriptionForm = () => {
                   {formData.paymentMethod === "PhonePe" && (
                     <div className="mt-4">
                       <label htmlFor="utrNumber" className="block text-sm font-medium text-gray-700 mb-1">
-                        UTR Number*
+                        UTR Number(PhonePe) or TranscationID*
                       </label>
                       <input
                         type="text"

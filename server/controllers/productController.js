@@ -5,6 +5,7 @@ export const createProduct = async (req, res) => {
   try {
     const product = new Product(req.body);
     const created = await product.save();
+
     res.status(201).json(created);
   } catch (error) {
     res.status(500).json({ message: 'Error creating product', error: error.message });
@@ -14,7 +15,9 @@ export const createProduct = async (req, res) => {
 // 🔹 Get All Products
 export const getAllProducts = async (req, res) => {
   try {
+
     const products = await Product.find();
+
     res.json(products);
   } catch (error) {
     res.status(500).json({ message: 'Error retrieving products', error: error.message });
