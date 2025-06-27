@@ -1,5 +1,6 @@
 import React from "react";
 import { Route, Routes, useLocation } from "react-router-dom";
+
 import SmoothRender from "./components/smoothrender.jsx";
 import Home from "./Pages/Home";
 import Signin from "./Pages/Signin";
