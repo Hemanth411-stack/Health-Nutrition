@@ -648,12 +648,7 @@ const SubscriptionForm = () => {
       className="w-17 h-15"
       title="Google Pay"
     />
-{/*     <img */}
-{/*       src="https://upload.wikimedia.org/wikipedia/commons/thumb/b/b5/Amazon_Pay_logo.svg/1024px-Amazon_Pay_logo.svg.png" */}
-{/*       alt="Amazon Pay" */}
-{/*       className="w-8 h-8" */}
-{/*       title="Amazon Pay" */}
-{/*     /> */}
+
   </div>
 
   {/* Payment Numbers */}
