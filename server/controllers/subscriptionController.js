@@ -2,6 +2,8 @@ import Subscription from '../models/Subscription.js';
 import Product from '../models/Product.js';
 import Delivery from '../models/Delivery.js';
 import UserInfo from "../models/Userinformation.js"
+import mongoose from 'mongoose';
+
 // 🔹 Get subscription count and all subscriptions for current user
 export const getUserSubscriptionStats = async (req, res) => {
   try {
@@ -424,126 +426,232 @@ export const deleteSubscriptionAndDeliveries = async (req, res) => {
 };
 
 
-// export const scheduleAllDeliveriesForSubscription = async (subscriptionId) => {
-//   const subscription = await Subscription.findById(subscriptionId)
-//     .populate('product')
-//     .populate('user');
 
-//   if (!subscription) {
-//     throw new Error('Subscription not found');
-//   }
-
-//   if (subscription.status !== 'active') {
-//     throw new Error('Deliveries can only be scheduled for active subscriptions');
-//   }
-
-//   const userInfo = await UserInfo.findOne({ user: subscription.user._id });
-//   if (!userInfo?.address) {
-//     throw new Error('User address not found');
-//   }
-
-//   const { address } = userInfo;
-//   const startDate = new Date(subscription.startDate);
-//   const endDate = new Date(subscription.endDate);
-
-//   // Batch delivery creation for efficiency
-//   const deliveryPromises = [];
-//   const deliveryDates = [];
-
-//   // Generate all dates in the subscription period
-//   for (let date = new Date(startDate); date <= endDate; date.setDate(date.getDate() + 1)) {
-//     deliveryDates.push(new Date(date));
-//   }
-
-//   // Check existing deliveries in one query
-//   const existingDeliveries = await Delivery.find({
-//     subscription: subscriptionId,
-//     deliveryDate: { $in: deliveryDates }
-//   }).select('deliveryDate');
-
-//   const existingDates = existingDeliveries.map(d => d.deliveryDate.toISOString().split('T')[0]);
-
-//   // Prepare new deliveries
-//   for (const date of deliveryDates) {
-//     const dateString = date.toISOString().split('T')[0];
-//     if (!existingDates.includes(dateString)) {
-//       deliveryPromises.push(
-//         Delivery.create({
-//           user: subscription.user._id,
-//           address: {
-//             street: address.street,
-//             area: address.area,
-//             city: address.city,
-//             state: address.state,
-//             pincode: address.pincode
-//           },
-//           slot: 'morning',
-//           deliveryDate: dateString,
-//           subscription: subscriptionId,
-//           product: subscription.product._id,
-//           isFestivalOrSunday: date.getDay() === 0,
-//           status: 'pending'
-//         })
-//       );
-//     }
-//   }
-
-//   await Promise.all(deliveryPromises);
-// };
+// Track paused days for each subscription
 
 
-
-// export const updateSubscriptionStatus = async (req, res) => {
-
-//   try {
-//     const { subscriptionId, paymentStatus, status } = req.body;
-
-//     // Validate required input
-//     if (!subscriptionId) {
-//       return res.status(400).json({ message: 'Subscription ID is required' });
-//     }
-
-//     const updateFields = {};
-//     if (paymentStatus) updateFields.paymentStatus = paymentStatus;
-//     if (status) updateFields.status = status;
-
-//     const updatedSubscription = await Subscription.findByIdAndUpdate(
-//       subscriptionId,
-//       { $set: updateFields },
-//       { new: true }
-//     );
-
-//     if (!updatedSubscription) {
-//       return res.status(404).json({ message: 'Subscription not found' });
-//     }
-
-//     res.status(200).json({
-//       message: 'Subscription updated successfully',
-//       subscription: updatedSubscription,
-//     });
-
-//   } catch (error) {
-//     console.error('Error updating subscription:', error);
-//     res.status(500).json({ message: 'Internal server error', error: error.message });
-//   }
-// };
+// 🔹 Pause and Reschedule Deliveries
 
 
+export const pauseAndRescheduleDeliveries = async (req, res) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
 
-// Set up daily cron job to check for missed deliveries
-//import cron from 'node-cron';
-//
-//cron.schedule('0 0 * * *', async () => {
-//  try {
-//    const activeSubscriptions = await Subscription.find({
-//      status: { $ne: 'cancelled' },
-//      endDate: { $gte: new Date() }
-//    });
-//
-//    for (const sub of activeSubscriptions) {
-//      await scheduleAllDeliveriesForSubscription(sub._id);
-//    }
-//  } catch (err) {
-//    console.error('Error in daily delivery scheduling:', err);
-//  }
-//});
+  try {
+    const { subscriptionId, startDate, endDate } = req.body;
+    const userId = req.user.id;
+
+    // Validate input
+    if (!subscriptionId || !startDate || !endDate) {
+      await session.abortTransaction();
+      return res.status(400).json({
+        success: false,
+        message: 'Subscription ID, start date, and end date are required'
+      });
+    }
+
+    // Find and validate subscription
+    const subscription = await Subscription.findById(subscriptionId).session(session);
+    if (!subscription) {
+      await session.abortTransaction();
+      return res.status(404).json({ 
+        success: false, 
+        message: 'Subscription not found' 
+      });
+    }
+
+    // Verify ownership
+    if (subscription.user.toString() !== userId) {
+      await session.abortTransaction();
+      return res.status(403).json({ 
+        success: false, 
+        message: 'Unauthorized' 
+      });
+    }
+
+    // Check subscription status
+    if (subscription.status !== 'active') {
+      await session.abortTransaction();
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Only active subscriptions can be paused' 
+      });
+    }
+
+    // Validate dates
+    const pauseStart = new Date(startDate);
+    const pauseEnd = new Date(endDate);
+    const now = new Date();
+
+    if (pauseStart >= pauseEnd) {
+      await session.abortTransaction();
+      return res.status(400).json({ 
+        success: false, 
+        message: 'End date must be after start date' 
+      });
+    }
+
+    if (pauseStart < now) {
+      await session.abortTransaction();
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Cannot pause past dates' 
+      });
+    }
+
+    // Find deliveries to pause (excluding Sundays)
+    const deliveriesToPause = await Delivery.find({
+      subscription: subscriptionId,
+      deliveryDate: { $gte: pauseStart, $lte: pauseEnd },
+      status: 'pending'
+    }).session(session);
+
+    const validDeliveries = deliveriesToPause.filter(d => d.deliveryDate.getDay() !== 0);
+    const daysToPause = validDeliveries.length;
+
+    if (daysToPause === 0) {
+      await session.abortTransaction();
+      return res.status(400).json({ 
+        success: false, 
+        message: 'No valid deliveries to pause' 
+      });
+    }
+
+    // Check pause limit
+    if (subscription.pausedDays + daysToPause > 6) {
+      await session.abortTransaction();
+      return res.status(400).json({
+        success: false,
+        message: `Maximum 6 pause days allowed. You've already used ${subscription.pausedDays} days.`,
+        remainingPauseDays: 6 - subscription.pausedDays
+      });
+    }
+
+    // Get user info for new deliveries
+    const userInfo = await UserInfo.findOne({ user: subscription.user._id }).session(session);
+    if (!userInfo || !userInfo.address) {
+      await session.abortTransaction();
+      return res.status(400).json({ 
+        success: false, 
+        message: 'User address information not found' 
+      });
+    }
+
+    // Calculate new end date
+    const newEndDate = new Date(subscription.endDate);
+    newEndDate.setDate(newEndDate.getDate() + daysToPause);
+
+    const pausedDeliveryRecords = [];
+    let currentDate = new Date(subscription.endDate);
+
+    // Process each delivery to be paused
+    for (const delivery of validDeliveries) {
+      // Skip Sundays when rescheduling
+      while (currentDate.getDay() === 0) {
+        currentDate.setDate(currentDate.getDate() + 1);
+      }
+
+      // Create new delivery at rescheduled date
+      const newDelivery = await Delivery.create([{
+        user: userId,
+        subscription: subscriptionId,
+        product: delivery.product,
+        deliveryDate: new Date(currentDate),
+        status: 'pending',
+        address: {
+          street: userInfo.address.street,
+          area: userInfo.address.area,
+          city: userInfo.address.city,
+          state: userInfo.address.state,
+          pincode: userInfo.address.pincode
+        },
+        slot: userInfo.slot || 'morning 6AM - 8AM',
+        isRescheduled: true
+      }], { session });
+
+      // Record the rescheduling
+      pausedDeliveryRecords.push({
+        originalDate: delivery.deliveryDate,
+        originalDeliveryId: delivery._id,
+        rescheduledDate: new Date(currentDate),
+        rescheduledDeliveryId: newDelivery[0]._id
+      });
+
+      // Cancel the original delivery
+      delivery.status = 'missed';
+      await delivery.save({ session });
+
+      // Move to next day
+      currentDate.setDate(currentDate.getDate() + 1);
+    }
+
+    // Update subscription
+    subscription.endDate = newEndDate;
+    subscription.pausedDays += daysToPause;
+    subscription.pausedDeliveries = subscription.pausedDeliveries || []; // Initialize if undefined
+    subscription.pausedDeliveries.push(...pausedDeliveryRecords);
+    await subscription.save({ session });
+
+    await session.commitTransaction();
+    
+    return res.status(200).json({
+      success: true,
+      message: `${daysToPause} deliveries rescheduled to end of subscription`,
+      data: {
+        newEndDate: newEndDate.toISOString().split('T')[0],
+        totalPausedDays: subscription.pausedDays,
+        remainingPauseDays: 6 - subscription.pausedDays,
+        rescheduledDeliveries: validDeliveries.length,
+        originalSubscriptionEnd: subscription.endDate.toISOString().split('T')[0]
+      }
+    });
+
+  } catch (error) {
+    await session.abortTransaction();
+    console.error('Pause and reschedule error:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to pause and reschedule deliveries',
+      error: error.message,
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    });
+  } finally {
+    session.endSession();
+  }
+};
+// 🔹 Get Pause Information
+export const getPauseInfo = async (req, res) => {
+  try {
+    const { subscriptionId } = req.params;
+    const userId = req.user.id;
+
+    const subscription = await Subscription.findById(subscriptionId);
+    if (!subscription) {
+      return res.status(404).json({ success: false, message: 'Subscription not found' });
+    }
+
+    if (subscription.user.toString() !== userId) {
+      return res.status(403).json({ success: false, message: 'Unauthorized' });
+    }
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        pausedDays: subscription.pausedDays,
+        remainingPauseDays: 6 - subscription.pausedDays,
+        canPauseMore: subscription.pausedDays < 6,
+        pausedDeliveries: subscription.pausedDeliveries
+      }
+    });
+
+  } catch (error) {
+    console.error('Get pause info error:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to get pause information',
+      error: error.message
+    });
+  }
+};
+
+

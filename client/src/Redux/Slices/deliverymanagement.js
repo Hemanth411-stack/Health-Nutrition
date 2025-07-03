@@ -76,7 +76,14 @@ const deliverymanagementSlice = createSlice({
       state.error = null;
       state.updateError = null;
     },
-    resetDeliveryState: () => initialState
+    resetDeliveryState: () => initialState,
+    updateLocalDeliveryStatus: (state, action) => {
+      const { deliveryId, status } = action.payload;
+      const index = state.deliveries.findIndex(d => d._id === deliveryId);
+      if (index !== -1) {
+        state.deliveries[index].status = status;
+      }
+    }
   },
   extraReducers: (builder) => {
     builder
@@ -88,7 +95,6 @@ const deliverymanagementSlice = createSlice({
       .addCase(fetchAllDeliveries.fulfilled, (state, action) => {
         state.loading = false;
         state.deliveries = action.payload.deliveries || [];
-        console.log("deliveries",action.payload.deliveries)
         state.lastUpdated = new Date().toISOString();
       })
       .addCase(fetchAllDeliveries.rejected, (state, action) => {
@@ -103,9 +109,11 @@ const deliverymanagementSlice = createSlice({
       })
       .addCase(updateDeliveryStatus.fulfilled, (state, action) => {
         state.updateLoading = false;
-        const updatedDelivery = action.payload.delivery;
-        state.deliveries = state.deliveries.map(delivery =>
-          delivery._id === updatedDelivery._id ? updatedDelivery : delivery
+        if (!action.payload?.delivery) return;
+        
+        const updated = action.payload.delivery;
+        state.deliveries = state.deliveries.map(d => 
+          d._id === updated._id ? { ...d, status: updated.status } : d
         );
         state.lastUpdated = new Date().toISOString();
       })

@@ -14,6 +14,7 @@ import DeliveryVerificationDashboard from "./components/admindeliveryverificatio
 import AdminDashboard from "./components/admindashboard.jsx";
 import DeliveryBoyRegister from "./components/deliveryboiregister.jsx";
 import DeliveryBoyLogin from "./components/deliveryboilogin.jsx";
+import LocationCapture from "./components/googleaddresses.jsx";
 
 function App() {
   return (
@@ -34,6 +35,7 @@ function App() {
       <Route path="/admin-dashboard" element={<AdminDashboard />} />
       <Route path="/delivery-boi-register" element={<DeliveryBoyRegister />} />
       <Route path="/login-deliverboi" element={<DeliveryBoyLogin />} />
+       <Route path="/google-addresses" element={<LocationCapture />} />
     </Routes>
   );
 }

@@ -61,6 +61,19 @@ const subscriptionSchema = new mongoose.Schema({
   },
   notes: {
     type: String,
+  },
+  pausedDays: {
+    type: Number,
+    default: 0,
+    min: 0,
+    max: 6
+  },
+  pausedDeliveries: {
+    type: [{
+      originalDate: Date,
+      rescheduledDate: Date
+    }],
+    default: [] // This ensures it's never undefined
   }
 }, { timestamps: true });
 
