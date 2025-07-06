@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FiPlus, FiChevronRight, FiCheck, FiClock, FiX } from 'react-icons/fi';
+import { FiPlus, FiCheck, FiClock, FiX } from 'react-icons/fi';
 import { useDispatch, useSelector } from 'react-redux';
 import { 
   createDeliveryVerification, 
@@ -10,10 +10,8 @@ import { toast } from 'react-toastify';
 import Header from "../components/Header.jsx";
 import { GoogleMap, Marker, useJsApiLoader } from "@react-google-maps/api";
 
-// API Keys (should be moved to environment variables in production)
 const GOOGLE_MAP_API_KEY = "AIzaSyAMPrwC9ii-4QvIRA_75CbxSp-6keDC6aM";
 
-// Map container styles
 const containerStyle = {
   width: "100%",
   height: "300px",
@@ -42,33 +40,25 @@ const AddressManagement = () => {
     pincode: '',
     type: 'Home'
   });
-  const [editingId, setEditingId] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [coords, setCoords] = useState(null);
-  const [address, setAddress] = useState("");
-  const [searchAddress, setSearchAddress] = useState("");
-  const [suggestions, setSuggestions] = useState([]);
   const [locationLoading, setLocationLoading] = useState(false);
   const [locationMethod, setLocationMethod] = useState(null);
   const [lastUpdated, setLastUpdated] = useState(null);
 
-  // Load Google Maps API
   const { isLoaded } = useJsApiLoader({
     googleMapsApiKey: GOOGLE_MAP_API_KEY,
     libraries: ["places"],
   });
 
-  // Safely handle null/undefined myVerification
   const addressList = Array.isArray(myVerification) ? myVerification : [];
 
-  // Load user's verification on mount
   useEffect(() => {
     if (userInfo) {
       dispatch(getMyVerificationStatus());
     }
   }, [dispatch, userInfo]);
 
-  // Handle notifications and state updates
   useEffect(() => {
     if (error) {
       toast.error(error);
@@ -77,18 +67,16 @@ const AddressManagement = () => {
     }
     
     if (success) {
-      toast.success(editingId ? 'Address updated successfully!' : 'Address added successfully!');
+      toast.success('Address added successfully!');
       setShowForm(false);
-      setEditingId(null);
       resetForm();
       setIsSubmitting(false);
       dispatch(getMyVerificationStatus()).then(() => {
         dispatch(resetVerificationState());
       });
     }
-  }, [error, success, dispatch, editingId]);
+  }, [error, success, dispatch]);
 
-  // Fetch address when coordinates change
   useEffect(() => {
     if (coords) {
       setLastUpdated(new Date());
@@ -100,78 +88,72 @@ const AddressManagement = () => {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  // Main location acquisition function
- // Main location acquisition function - Updated version
-// Updated getCurrentLocation function
-const getCurrentLocation = async () => {
-  setLocationLoading(true);
-  setLocationMethod(null);
-  
-  try {
-    if (navigator.geolocation) {
-      const position = await new Promise((resolve, reject) => {
-        navigator.geolocation.getCurrentPosition(resolve, reject, {
-          enableHighAccuracy: true,
-          timeout: 10000,
-          maximumAge: 0
-        });
-      });
-
-      const newCoords = {
-        lat: position.coords.latitude,
-        lng: position.coords.longitude
-      };
-
-      setCoords(newCoords);
-      setLocationMethod("GPS");
-
-      // Use LocationIQ for reverse geocoding (more reliable than Google for address components)
-      try {
-        const LOCATIONIQ_TOKEN = "pk.2facabff1fbb7c3da67ac5b80179b3e3"; // Your LocationIQ token
-        const response = await fetch(
-          `https://us1.locationiq.com/v1/reverse.php?key=${LOCATIONIQ_TOKEN}&lat=${newCoords.lat}&lon=${newCoords.lng}&format=json`
-        );
-        const data = await response.json();
-        
-        if (data.address) {
-          const addr = data.address;
-          setFormData({
-            street: addr.road || addr.pedestrian || addr.footway || '',
-            area: addr.suburb || addr.neighbourhood || addr.quarter || '',
-            city: addr.city || addr.town || addr.village || addr.county || '',
-            state: addr.state || addr.region || '',
-            pincode: addr.postcode || '',
-            type: formData.type // Keep existing type
+  const getCurrentLocation = async () => {
+    setLocationLoading(true);
+    setLocationMethod(null);
+    
+    try {
+      if (navigator.geolocation) {
+        const position = await new Promise((resolve, reject) => {
+          navigator.geolocation.getCurrentPosition(resolve, reject, {
+            enableHighAccuracy: true,
+            timeout: 10000,
+            maximumAge: 0
           });
-        }
-      } catch (geocodeError) {
-        console.error("Geocoding error:", geocodeError);
-        toast.info("Got your location but couldn't fetch full address details");
-      }
+        });
 
-      return newCoords;
-    } else {
-      throw new Error("Geolocation is not supported by this browser.");
+        const newCoords = {
+          lat: position.coords.latitude,
+          lng: position.coords.longitude
+        };
+
+        setCoords(newCoords);
+        setLocationMethod("GPS");
+
+        try {
+          const LOCATIONIQ_TOKEN = "pk.2facabff1fbb7c3da67ac5b80179b3e3";
+          const response = await fetch(
+            `https://us1.locationiq.com/v1/reverse.php?key=${LOCATIONIQ_TOKEN}&lat=${newCoords.lat}&lon=${newCoords.lng}&format=json`
+          );
+          const data = await response.json();
+          
+          if (data.address) {
+            const addr = data.address;
+            setFormData({
+              street: addr.road || addr.pedestrian || addr.footway || '',
+              area: addr.suburb || addr.neighbourhood || addr.quarter || '',
+              city: addr.city || addr.town || addr.village || addr.county || '',
+              state: addr.state || addr.region || '',
+              pincode: addr.postcode || '',
+              type: formData.type
+            });
+          }
+        } catch (geocodeError) {
+          console.error("Geocoding error:", geocodeError);
+          toast.info("Got your location but couldn't fetch full address details");
+        }
+
+        return newCoords;
+      } else {
+        throw new Error("Geolocation is not supported by this browser.");
+      }
+    } catch (error) {
+      console.error("Location error:", error);
+      toast.error("Couldn't get precise location. Please try manual selection.");
+      return null;
+    } finally {
+      setLocationLoading(false);
     }
-  } catch (error) {
-    console.error("Location error:", error);
-    toast.error("Couldn't get precise location. Please try manual selection.");
-    return null;
-  } finally {
-    setLocationLoading(false);
-  }
-};
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
     
-    // Generate Google Maps link
     let googleMapsLink = "";
     if (coords) {
       googleMapsLink = `https://www.google.com/maps?q=${coords.lat},${coords.lng}`;
     } else {
-      // Fallback to address-based link if coordinates not available
       const addressString = `${formData.street}, ${formData.area}, ${formData.city}, ${formData.state} ${formData.pincode}`;
       googleMapsLink = `https://www.google.com/maps?q=${encodeURIComponent(addressString)}`;
     }
@@ -186,21 +168,10 @@ const getCurrentLocation = async () => {
         type: formData.type,
         googleMapLink: googleMapsLink,
       },
-      
-      
-      
     };
 
     try {
-      if (editingId) {
-        console.log("address data with google map link",addressData)
-        await dispatch(createDeliveryVerification({
-          ...addressData,
-          id: editingId
-        })).unwrap();
-      } else {
-        await dispatch(createDeliveryVerification(addressData)).unwrap();
-      }
+      await dispatch(createDeliveryVerification(addressData)).unwrap();
     } catch (error) {
       toast.error(error.message || 'Failed to save address');
       setIsSubmitting(false);
@@ -217,11 +188,8 @@ const getCurrentLocation = async () => {
       type: 'Home'
     });
     setCoords(null);
-    setAddress("");
-    setSearchAddress("");
   };
 
-  // Handle map clicks
   const handleMapClick = async (e) => {
     const newLat = e.latLng.lat();
     const newLng = e.latLng.lng();
@@ -229,7 +197,6 @@ const getCurrentLocation = async () => {
     setLocationMethod("Map Selection");
   };
 
-  // Safely check for pending verifications
   const hasPendingVerification = addressList.some(
     address => address?.verifydeliverystatus === 'pending'
   );
@@ -241,14 +208,12 @@ const getCurrentLocation = async () => {
         <h1 className="text-xl font-bold text-gray-900">Saved Addresses</h1>
       </div>
 
-      {/* Loading state */}
       {loading && addressList.length === 0 ? (
         <div className="flex justify-center items-center h-64">
           <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-orange-500"></div>
         </div>
       ) : (
         <>
-          {/* Address List */}
           {addressList.length > 0 ? (
             <div className="space-y-3 mt-4">
               {addressList.map(address => (
@@ -283,6 +248,11 @@ const getCurrentLocation = async () => {
                       <p className="text-gray-600 text-sm">
                         {address.address?.area}, {address.address?.city} - {address.address?.pincode}
                       </p>
+                      {address.verifydeliverystatus === 'not-deliverable' && (
+                        <div className="mt-2 p-2 bg-red-50 rounded text-red-700 text-sm">
+                          We're sorry, we don't currently deliver to this area. We'll be expanding soon!
+                        </div>
+                      )}
                       {address.googleMapsLink && (
                         <a 
                           href={address.googleMapsLink} 
@@ -294,26 +264,6 @@ const getCurrentLocation = async () => {
                         </a>
                       )}
                     </div>
-                    <button 
-                      onClick={() => {
-                        setFormData({
-                          street: address.address?.street || '',
-                          area: address.address?.area || '',
-                          city: address.address?.city || '',
-                          state: address.address?.state || '',
-                          pincode: address.address?.pincode || '',
-                          type: address.address?.type || 'Home'
-                        });
-                        if (address.coordinates) {
-                          setCoords(address.coordinates);
-                        }
-                        setEditingId(address._id);
-                        setShowForm(true);
-                      }}
-                      className="text-gray-400 hover:text-orange-500 ml-2"
-                    >
-                      <FiChevronRight size={20} />
-                    </button>
                   </div>
                 </div>
               ))}
@@ -329,13 +279,11 @@ const getCurrentLocation = async () => {
         </>
       )}
 
-      {/* Add New Address Button (Fixed at bottom) */}
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t py-3 px-4 shadow-md">
         <button
           onClick={() => {
             if (!hasPendingVerification && !loading) {
               setShowForm(true);
-              setEditingId(null);
               resetForm();
             }
           }}
@@ -359,14 +307,11 @@ const getCurrentLocation = async () => {
         </button>
       </div>
 
-      {/* Add/Edit Address Form Modal */}
       {showForm && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-start justify-center p-4 z-50 overflow-y-auto">
           <div className="bg-white rounded-lg w-full max-w-md mt-12 mb-8">
             <div className="sticky top-0 bg-white py-4 px-6 border-b flex justify-between items-center">
-              <h2 className="text-lg font-bold">
-                {editingId ? 'Edit Address' : 'Add New Address'}
-              </h2>
+              <h2 className="text-lg font-bold">Add New Address</h2>
               <button 
                 onClick={() => {
                   setShowForm(false);
@@ -474,7 +419,6 @@ const getCurrentLocation = async () => {
                   </div>
                 </div>
 
-                {/* Map Section */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Location Pin</label>
                   <div className="flex items-center gap-2 mb-2">
@@ -500,7 +444,7 @@ const getCurrentLocation = async () => {
                   {isLoaded && (
                     <GoogleMap
                       mapContainerStyle={containerStyle}
-                      center={coords || { lat: 20.5937, lng: 78.9629 }} // Default to India center
+                      center={coords || { lat: 20.5937, lng: 78.9629 }}
                       zoom={coords ? 15 : 5}
                       onClick={handleMapClick}
                       options={{
@@ -541,7 +485,7 @@ const getCurrentLocation = async () => {
                     isSubmitting ? 'opacity-70 cursor-not-allowed' : ''
                   }`}
                 >
-                  {isSubmitting ? 'Saving...' : editingId ? 'Update Address' : 'Save Address'}
+                  {isSubmitting ? 'Saving...' : 'Save Address'}
                 </button>
               </div>
             </form>

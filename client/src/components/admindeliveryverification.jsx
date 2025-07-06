@@ -26,6 +26,8 @@ const hyderabadAreas = [
   "Yapral", "Yousufguda"
 ];
 
+const ITEMS_PER_PAGE = 10;
+
 export const DeliveryVerificationDashboard = () => {
   const dispatch = useDispatch();
   const {
@@ -38,6 +40,7 @@ export const DeliveryVerificationDashboard = () => {
   const [verificationStatus, setVerificationStatus] = useState('pending');
   const [deliveryCharge, setDeliveryCharge] = useState(0);
   const [selectedArea, setSelectedArea] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
     dispatch(getAllVerifications());
@@ -77,6 +80,17 @@ export const DeliveryVerificationDashboard = () => {
     }
   };
 
+  // Pagination logic
+  const totalPages = Math.ceil(deliveries?.length / ITEMS_PER_PAGE) || 1;
+  const paginatedDeliveries = deliveries?.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  ) || [];
+
+  const handlePageChange = (page) => {
+    setCurrentPage(Math.max(1, Math.min(page, totalPages)));
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 p-4 sm:p-6">
       <div className="max-w-7xl mx-auto">
@@ -104,76 +118,139 @@ export const DeliveryVerificationDashboard = () => {
                 <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
               </div>
             ) : deliveries?.length > 0 ? (
-              <div className="overflow-x-auto">
-                <div className="sm:hidden space-y-4">
-                  {deliveries.map((delivery) => (
-                    <div key={delivery._id} className="bg-white p-4 rounded-lg shadow border border-gray-200">
-                      <div className="mb-2">
-                        <span className="font-medium">Address: </span>
-                        <span className="text-gray-700">
-                          {`${delivery.address.street}, ${delivery.address.area}, ${delivery.address.city}`}
-                        </span>
+              <>
+                <div className="overflow-x-auto">
+                  <div className="sm:hidden space-y-4">
+                    {paginatedDeliveries.map((delivery) => (
+                      <div key={delivery._id} className="bg-white p-4 rounded-lg shadow border border-gray-200">
+                        <div className="mb-2">
+                          <span className="font-medium">Address: </span>
+                          <span className="text-gray-700">
+                            {`${delivery.address.street}, ${delivery.address.area}, ${delivery.address.city}`}
+                          </span>
+                        </div>
+                        <div className="mb-2">
+                          <span className="font-medium">User: </span>
+                          <span className="text-gray-700">{delivery.user.name || 'N/A'}</span>
+                        </div>
+                        <div className="mb-2">
+                          <span className="font-medium">Status: </span>
+                          <StatusBadge status={delivery.verifydeliverystatus} />
+                        </div>
+                        <div className="mb-2">
+                          <span className="font-medium">Charge: </span>
+                          <span className="text-gray-700">{delivery.deliveryCharge || 0}/-</span>
+                        </div>
+                        <button
+                          onClick={() => handleVerify(delivery)}
+                          className="w-full mt-2 px-3 py-1 bg-indigo-600 text-white rounded-md text-sm font-medium hover:bg-indigo-700"
+                        >
+                          Verify
+                        </button>
                       </div>
-                      <div className="mb-2">
-                        <span className="font-medium">User: </span>
-                        <span className="text-gray-700">{delivery.user.name || 'N/A'}</span>
-                      </div>
-                      <div className="mb-2">
-                        <span className="font-medium">Status: </span>
-                        <StatusBadge status={delivery.verifydeliverystatus} />
-                      </div>
-                      <div className="mb-2">
-                        <span className="font-medium">Charge: </span>
-                        <span className="text-gray-700">{delivery.deliveryCharge || 0}/-</span>
-                      </div>
-                      <button
-                        onClick={() => handleVerify(delivery)}
-                        className="w-full mt-2 px-3 py-1 bg-indigo-600 text-white rounded-md text-sm font-medium hover:bg-indigo-700"
-                      >
-                        Verify
-                      </button>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
+
+                  <table className="hidden sm:table min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Address</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Charge</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {paginatedDeliveries.map((delivery) => (
+                        <tr key={delivery._id} className="hover:bg-gray-50">
+                          <td className="px-4 py-4 text-sm text-gray-900">
+                            {`${delivery.address.street}, ${delivery.address.area}`}
+                          </td>
+                          <td className="px-4 py-4 text-sm text-gray-500">
+                            {delivery.user.name || 'N/A'}
+                          </td>
+                          <td className="px-4 py-4 whitespace-nowrap">
+                            <StatusBadge status={delivery.verifydeliverystatus} />
+                          </td>
+                          <td className="px-4 py-4 text-sm text-gray-500">
+                            {delivery.deliveryCharge || 0}/-
+                          </td>
+                          <td className="px-4 py-4 whitespace-nowrap text-sm font-medium">
+                            <button
+                              onClick={() => handleVerify(delivery)}
+                              className="text-indigo-600 hover:text-indigo-900"
+                            >
+                              Verify
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
 
-                <table className="hidden sm:table min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Address</th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User</th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Charge</th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {deliveries.map((delivery) => (
-                      <tr key={delivery._id} className="hover:bg-gray-50">
-                        <td className="px-4 py-4 text-sm text-gray-900">
-                          {`${delivery.address.street}, ${delivery.address.area}`}
-                        </td>
-                        <td className="px-4 py-4 text-sm text-gray-500">
-                          {delivery.user.name || 'N/A'}
-                        </td>
-                        <td className="px-4 py-4 whitespace-nowrap">
-                          <StatusBadge status={delivery.verifydeliverystatus} />
-                        </td>
-                        <td className="px-4 py-4 text-sm text-gray-500">
-                          {delivery.deliveryCharge || 0}/-
-                        </td>
-                        <td className="px-4 py-4 whitespace-nowrap text-sm font-medium">
+                {/* Pagination */}
+                <div className="flex items-center justify-between mt-4">
+                  <div className="text-sm text-gray-700">
+                    Showing <span className="font-medium">{(currentPage - 1) * ITEMS_PER_PAGE + 1}</span> to{' '}
+                    <span className="font-medium">
+                      {Math.min(currentPage * ITEMS_PER_PAGE, deliveries.length)}
+                    </span>{' '}
+                    of <span className="font-medium">{deliveries.length}</span> results
+                  </div>
+                  <div className="flex space-x-2">
+                    <button
+                      onClick={() => handlePageChange(currentPage - 1)}
+                      disabled={currentPage === 1}
+                      className="px-3 py-1 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      Previous
+                    </button>
+                    <div className="flex space-x-1">
+                      {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                        let pageNum;
+                        if (totalPages <= 5) {
+                          pageNum = i + 1;
+                        } else if (currentPage <= 3) {
+                          pageNum = i + 1;
+                        } else if (currentPage >= totalPages - 2) {
+                          pageNum = totalPages - 4 + i;
+                        } else {
+                          pageNum = currentPage - 2 + i;
+                        }
+                        return (
                           <button
-                            onClick={() => handleVerify(delivery)}
-                            className="text-indigo-600 hover:text-indigo-900"
+                            key={pageNum}
+                            onClick={() => handlePageChange(pageNum)}
+                            className={`px-3 py-1 border rounded-md text-sm font-medium ${currentPage === pageNum ? 'bg-indigo-600 text-white border-indigo-600' : 'border-gray-300 text-gray-700 bg-white hover:bg-gray-50'}`}
                           >
-                            Verify
+                            {pageNum}
                           </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                        );
+                      })}
+                      {totalPages > 5 && currentPage < totalPages - 2 && (
+                        <span className="px-3 py-1 text-sm text-gray-700">...</span>
+                      )}
+                      {totalPages > 5 && currentPage < totalPages - 2 && (
+                        <button
+                          onClick={() => handlePageChange(totalPages)}
+                          className="px-3 py-1 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+                        >
+                          {totalPages}
+                        </button>
+                      )}
+                    </div>
+                    <button
+                      onClick={() => handlePageChange(currentPage + 1)}
+                      disabled={currentPage === totalPages}
+                      className="px-3 py-1 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      Next
+                    </button>
+                  </div>
+                </div>
+              </>
             ) : (
               <div className="text-center py-12">
                 <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
