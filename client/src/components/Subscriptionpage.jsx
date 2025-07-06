@@ -12,7 +12,7 @@ import {
 } from "../Redux/Slices/subscriptionSlice";
 import { Link } from "react-router-dom";
 import Footer from "./Footer";
-import SubscriptionActions from "./SubscriptionActions";
+import SubscriptionActions from "./subscriptionactions.jsx";
 
 export const SubscriptionDashboard = () => {
   const [showWelcomeMessage, setShowWelcomeMessage] = useState(true);
