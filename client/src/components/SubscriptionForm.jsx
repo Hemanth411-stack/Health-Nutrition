@@ -28,6 +28,7 @@ const SubscriptionForm = () => {
 
   // Get user info and verification status from Redux
   const userInfo = useSelector(selectUserInfo);
+  console.log("user information",userInfo)
   const userInfoStatus = useSelector(selectUserInfoStatus);
   const { myVerification, loading: verificationLoading } = useSelector(state => state.verifyDelivery);
 
@@ -89,7 +90,8 @@ const SubscriptionForm = () => {
         city: userInfo.address?.city || '',
         state: userInfo.address?.state || '',
         pincode: userInfo.address?.pincode || '',
-        landmark: userInfo.address?.landmark || ''
+        landmark: userInfo.address?.landmark || '',
+        
       }));
     }
   }, [userInfo]);
@@ -111,6 +113,7 @@ const SubscriptionForm = () => {
         city: selectedAddress.address.city,
         state: selectedAddress.address.state,
         pincode: selectedAddress.address.pincode,
+        googleMapLink: selectedAddress.address.googleMapLink,
         deliveryCharge: selectedAddress.deliveryCharge || 0
       }));
     }
@@ -221,7 +224,8 @@ const SubscriptionForm = () => {
           city: formData.city,
           state: formData.state,
           pincode: formData.pincode,
-          landmark: formData.landmark
+          landmark: formData.landmark,
+          googleMapLink:formData.googleMapLink
         },
       };
       
@@ -425,7 +429,7 @@ const SubscriptionForm = () => {
                           .filter(v => v.verifydeliverystatus === "approved")
                           .map((verification) => (
                             <option key={verification._id} value={verification._id}>
-                              {`${verification.address.street}, ${verification.address.area}, ${verification.address.city} - ${verification.address.pincode}`}
+                              {`${verification.address.street}, ${verification.address.area}, ${verification.address.city} - ${verification.address.pincode} google link ${verification.address.googleMapLink}`}
                             </option>
                           ))
                       ) : null}

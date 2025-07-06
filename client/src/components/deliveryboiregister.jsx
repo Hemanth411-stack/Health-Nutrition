@@ -1,13 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import { useNavigate, Link } from 'react-router-dom';
 import { registerDeliveryBoy, resetAuthState } from '../Redux/Slices/deliveryboi';
-import { useNavigate } from 'react-router-dom';
 import {
   selectDeliveryBoyToken,
   selectAuthStatus,
   selectAuthError
 } from '../Redux/Slices/deliveryboi';
-import { Link } from 'react-router-dom'
+
 const hyderabadAreas = [
   "Ameerpet", "Abids", "Adikmet", "Alwal", "Amberpet", "Asif Nagar", "Attapur",
   "Azampura", "Bachupally", "Bahadurpura", "Balanagar", "Banjara Hills", "Barkatpura",
@@ -35,6 +35,7 @@ const DeliveryBoyRegister = () => {
   const status = useSelector(selectAuthStatus);
   const error = useSelector(selectAuthError);
   const token = useSelector(selectDeliveryBoyToken);
+  const fileInputRef = useRef(null);
 
   const [formData, setFormData] = useState({
     name: '',
@@ -43,6 +44,8 @@ const DeliveryBoyRegister = () => {
     confirmPassword: '',
     serviceAreas: []
   });
+  const [profileImage, setProfileImage] = useState(null);
+  const [previewImage, setPreviewImage] = useState(null);
   const [errors, setErrors] = useState({});
 
   // Redirect if already logged in
@@ -62,12 +65,47 @@ const DeliveryBoyRegister = () => {
         confirmPassword: '',
         serviceAreas: []
       });
-      // Redirect to login after a delay
+      setProfileImage(null);
+      setPreviewImage(null);
       setTimeout(() => {
         navigate('/login-deliverboi');
       }, 2000);
     }
   }, [status, navigate]);
+
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      // Validate file type and size
+      if (!file.type.match('image.*')) {
+        setErrors(prev => ({ ...prev, profileImage: 'Only image files are allowed' }));
+        return;
+      }
+      if (file.size > 5 * 1024 * 1024) { // 5MB limit
+        setErrors(prev => ({ ...prev, profileImage: 'File size must be less than 5MB' }));
+        return;
+      }
+      
+      setProfileImage(file);
+      setErrors(prev => ({ ...prev, profileImage: null }));
+      
+      // Create preview URL
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPreviewImage(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleRemoveImage = () => {
+    setProfileImage(null);
+    setPreviewImage(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+    setErrors(prev => ({ ...prev, profileImage: null }));
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -76,7 +114,6 @@ const DeliveryBoyRegister = () => {
       [name]: value
     });
     
-    // Clear error when user starts typing
     if (errors[name]) {
       setErrors({
         ...errors,
@@ -86,17 +123,13 @@ const DeliveryBoyRegister = () => {
   };
 
   const handleAreaSelect = (area) => {
-    setFormData(prev => {
-      const alreadySelected = prev.serviceAreas.includes(area);
-      return {
-        ...prev,
-        serviceAreas: alreadySelected
-          ? prev.serviceAreas.filter(a => a !== area)
-          : [...prev.serviceAreas, area]
-      };
-    });
+    setFormData(prev => ({
+      ...prev,
+      serviceAreas: prev.serviceAreas.includes(area)
+        ? prev.serviceAreas.filter(a => a !== area)
+        : [...prev.serviceAreas, area]
+    }));
     
-    // Clear error when user selects an area
     if (errors.serviceAreas) {
       setErrors({
         ...errors,
@@ -108,26 +141,20 @@ const DeliveryBoyRegister = () => {
   const validateForm = () => {
     const newErrors = {};
     
-    if (!formData.name.trim()) {
-      newErrors.name = 'Name is required';
-    }
-    
+    if (!formData.name.trim()) newErrors.name = 'Name is required';
     if (!formData.phone.trim()) {
       newErrors.phone = 'Phone number is required';
     } else if (!/^\d{10}$/.test(formData.phone)) {
       newErrors.phone = 'Phone number must be 10 digits';
     }
-    
     if (!formData.password) {
       newErrors.password = 'Password is required';
     } else if (formData.password.length < 6) {
       newErrors.password = 'Password must be at least 6 characters';
     }
-    
     if (formData.password !== formData.confirmPassword) {
       newErrors.confirmPassword = 'Passwords do not match';
     }
-    
     if (formData.serviceAreas.length === 0) {
       newErrors.serviceAreas = 'Please select at least one service area';
     }
@@ -136,25 +163,24 @@ const DeliveryBoyRegister = () => {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     
-    if (!validateForm()) {
-      return;
-    }
+    if (!validateForm()) return;
     
-    // Reset any previous errors
     dispatch(resetAuthState());
     
-    // Prepare the data for API
-    const registrationData = {
-      name: formData.name,
-      phone: formData.phone,
-      password: formData.password,
-      serviceAreas: formData.serviceAreas
-    };
+    // Create FormData for the API
+    const formDataToSend = new FormData();
+    formDataToSend.append('name', formData.name);
+    formDataToSend.append('phone', formData.phone);
+    formDataToSend.append('password', formData.password);
+    formDataToSend.append('serviceAreas', JSON.stringify(formData.serviceAreas));
+    if (profileImage) {
+      formDataToSend.append('profileImage', profileImage);
+    }
     
-    dispatch(registerDeliveryBoy(registrationData));
+    dispatch(registerDeliveryBoy(formDataToSend));
   };
 
   const isSubmitting = status === 'loading';
@@ -165,13 +191,16 @@ const DeliveryBoyRegister = () => {
         <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
           Delivery Boy Registration
         </h2>
+        <p className="mt-2 text-center text-sm text-gray-600">
+          Create your delivery partner account
+        </p>
       </div>
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
         <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
-          {/* Show success message */}
+          {/* Success Message */}
           {status === 'succeeded' && (
-            <div className="rounded-md bg-green-50 p-4 mb-4">
+            <div className="mb-4 rounded-md bg-green-50 p-4">
               <div className="flex">
                 <div className="flex-shrink-0">
                   <svg className="h-5 w-5 text-green-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
@@ -187,9 +216,9 @@ const DeliveryBoyRegister = () => {
             </div>
           )}
 
-          {/* Show error message */}
-          {status === 'failed' && error && (
-            <div className="rounded-md bg-red-50 p-4 mb-4">
+          {/* Error Message */}
+          {error && (
+            <div className="mb-4 rounded-md bg-red-50 p-4">
               <div className="flex">
                 <div className="flex-shrink-0">
                   <svg className="h-5 w-5 text-red-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
@@ -197,16 +226,83 @@ const DeliveryBoyRegister = () => {
                   </svg>
                 </div>
                 <div className="ml-3">
-                  <p className="text-sm font-medium text-red-800">
-                    {error}
-                  </p>
+                  <h3 className="text-sm font-medium text-red-800">{error}</h3>
                 </div>
               </div>
             </div>
           )}
 
           <form className="space-y-6" onSubmit={handleSubmit}>
-            {/* Name field */}
+            {/* Profile Image Upload */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700">
+                Profile Image
+              </label>
+              <div className="mt-1 flex items-center">
+                <div className="relative rounded-full overflow-hidden h-16 w-16 bg-gray-200">
+                  {previewImage ? (
+                    <>
+                      <img
+                        src={previewImage}
+                        alt="Profile preview"
+                        className="h-full w-full object-cover"
+                      />
+                      <button
+                        type="button"
+                        onClick={handleRemoveImage}
+                        className="absolute top-0 right-0 bg-red-500 text-white rounded-full p-1"
+                      >
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          className="h-4 w-4"
+                          viewBox="0 0 20 20"
+                          fill="currentColor"
+                        >
+                          <path
+                            fillRule="evenodd"
+                            d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                            clipRule="evenodd"
+                          />
+                        </svg>
+                      </button>
+                    </>
+                  ) : (
+                    <svg
+                      className="h-full w-full text-gray-400"
+                      fill="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path d="M24 20.993V24H0v-2.996A14.977 14.977 0 0112 15c3.183 0 6.235 1.264 8.485 3.515A9.975 9.975 0 0024 20.993zM12 12a6 6 0 100-12 6 6 0 000 12z" />
+                    </svg>
+                  )}
+                </div>
+                <div className="ml-4">
+                  <input
+                    id="profileImage"
+                    name="profileImage"
+                    type="file"
+                    ref={fileInputRef}
+                    onChange={handleImageChange}
+                    accept="image/*"
+                    className="hidden"
+                  />
+                  <label
+                    htmlFor="profileImage"
+                    className="px-3 py-2 border border-gray-300 rounded-md shadow-sm text-sm leading-4 font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 cursor-pointer"
+                  >
+                    {previewImage ? 'Change' : 'Upload'}
+                  </label>
+                  <p className="text-xs text-gray-500 mt-1">
+                    JPEG, PNG (Max 5MB)
+                  </p>
+                  {errors.profileImage && (
+                    <p className="mt-1 text-sm text-red-600">{errors.profileImage}</p>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Name Field */}
             <div>
               <label htmlFor="name" className="block text-sm font-medium text-gray-700">
                 Full Name
@@ -221,11 +317,13 @@ const DeliveryBoyRegister = () => {
                   onChange={handleChange}
                   className={`appearance-none block w-full px-3 py-2 border ${errors.name ? 'border-red-300' : 'border-gray-300'} rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm`}
                 />
-                {errors.name && <p className="mt-2 text-sm text-red-600">{errors.name}</p>}
+                {errors.name && (
+                  <p className="mt-1 text-sm text-red-600">{errors.name}</p>
+                )}
               </div>
             </div>
 
-            {/* Phone field */}
+            {/* Phone Field */}
             <div>
               <label htmlFor="phone" className="block text-sm font-medium text-gray-700">
                 Phone Number
@@ -240,11 +338,13 @@ const DeliveryBoyRegister = () => {
                   onChange={handleChange}
                   className={`appearance-none block w-full px-3 py-2 border ${errors.phone ? 'border-red-300' : 'border-gray-300'} rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm`}
                 />
-                {errors.phone && <p className="mt-2 text-sm text-red-600">{errors.phone}</p>}
+                {errors.phone && (
+                  <p className="mt-1 text-sm text-red-600">{errors.phone}</p>
+                )}
               </div>
             </div>
 
-            {/* Password fields */}
+            {/* Password Field */}
             <div>
               <label htmlFor="password" className="block text-sm font-medium text-gray-700">
                 Password
@@ -259,10 +359,13 @@ const DeliveryBoyRegister = () => {
                   onChange={handleChange}
                   className={`appearance-none block w-full px-3 py-2 border ${errors.password ? 'border-red-300' : 'border-gray-300'} rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm`}
                 />
-                {errors.password && <p className="mt-2 text-sm text-red-600">{errors.password}</p>}
+                {errors.password && (
+                  <p className="mt-1 text-sm text-red-600">{errors.password}</p>
+                )}
               </div>
             </div>
 
+            {/* Confirm Password Field */}
             <div>
               <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">
                 Confirm Password
@@ -277,7 +380,9 @@ const DeliveryBoyRegister = () => {
                   onChange={handleChange}
                   className={`appearance-none block w-full px-3 py-2 border ${errors.confirmPassword ? 'border-red-300' : 'border-gray-300'} rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm`}
                 />
-                {errors.confirmPassword && <p className="mt-2 text-sm text-red-600">{errors.confirmPassword}</p>}
+                {errors.confirmPassword && (
+                  <p className="mt-1 text-sm text-red-600">{errors.confirmPassword}</p>
+                )}
               </div>
             </div>
 
@@ -317,7 +422,9 @@ const DeliveryBoyRegister = () => {
                     Clear All
                   </button>
                 </div>
-                {errors.serviceAreas && <p className="mt-2 text-sm text-red-600">{errors.serviceAreas}</p>}
+                {errors.serviceAreas && (
+                  <p className="mt-1 text-sm text-red-600">{errors.serviceAreas}</p>
+                )}
                 <div className="mt-2">
                   <p className="text-sm font-medium text-gray-700">Selected Areas:</p>
                   {formData.serviceAreas.length > 0 ? (
@@ -348,52 +455,55 @@ const DeliveryBoyRegister = () => {
               </div>
             </div>
 
+            {/* Submit Button */}
             <div>
-  <button
-    type="submit"
-    disabled={isSubmitting}
-    className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
-  >
-    {isSubmitting ? (
-      <>
-        <svg
-          className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
-          xmlns="http://www.w3.org/2000/svg"
-          fill="none"
-          viewBox="0 0 24 24"
-        >
-          <circle
-            className="opacity-25"
-            cx="12"
-            cy="12"
-            r="10"
-            stroke="currentColor"
-            strokeWidth="4"
-          ></circle>
-          <path
-            className="opacity-75"
-            fill="currentColor"
-            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-          ></path>
-        </svg>
-        Processing...
-      </>
-    ) : (
-      'Register'
-    )}
-  </button>
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isSubmitting ? (
+                  <>
+                    <svg
+                      className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      ></circle>
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      ></path>
+                    </svg>
+                    Processing...
+                  </>
+                ) : (
+                  'Register'
+                )}
+              </button>
+            </div>
 
-  <div className="mt-4 text-center">
-    <Link
-      to="/login-deliverboi"
-      className="text-sm text-blue-600 hover:underline"
-    >
-      Already have an account? Login
-    </Link>
-  </div>
-</div>
-
-
+            {/* Login Link */}
+            <div className="text-center">
+              <p className="text-sm text-gray-600">
+                Already have an account?{' '}
+                <Link
+                  to="/login-deliverboi"
+                  className="font-medium text-blue-600 hover:text-blue-500"
+                >
+                  Login here
+                </Link>
+              </p>
+            </div>
           </form>
         </div>
       </div>

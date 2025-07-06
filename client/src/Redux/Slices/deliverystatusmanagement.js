@@ -10,6 +10,8 @@ export const createDeliveryVerification = createAsyncThunk(
   async (verificationData, { getState, rejectWithValue }) => {
     try {
       const { user } = getState();
+      console.log("token details",user.userInfo.token)
+      console.log("Sending verification data:", verificationData);
       const config = {
         headers: {
           'Content-Type': 'application/json',

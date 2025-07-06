@@ -34,7 +34,7 @@ const SubscriptionManagement = () => {
   const [showCancelForm, setShowCancelForm] = useState(false);
   const [cancelDate, setCancelDate] = useState('');
   const [cancelMessage, setCancelMessage] = useState('');
-  const [deletingId, setDeletingId] = useState(null); // Track which subscription is being deleted
+  const [deletingId, setDeletingId] = useState(null);
 
   useEffect(() => {
     if (subscriptions.length > 0) {
@@ -106,13 +106,13 @@ const SubscriptionManagement = () => {
   const handleDeleteSubscription = async (subscriptionId) => {
     if (window.confirm('Are you sure you want to delete this subscription and all its deliveries?')) {
       try {
-        setDeletingId(subscriptionId); // Set the deleting ID
+        setDeletingId(subscriptionId);
         await dispatch(deleteSubscriptionAndDeliveries(subscriptionId)).unwrap();
         setLocalSubscriptions(prev => prev.filter(sub => sub._id !== subscriptionId));
       } catch (error) {
         console.error('Failed to delete subscription:', error);
       } finally {
-        setDeletingId(null); // Reset the deleting ID
+        setDeletingId(null);
       }
     }
   };
@@ -208,54 +208,74 @@ const SubscriptionManagement = () => {
   return (
     <div className="min-h-screen bg-gray-100 p-4 md:p-6">
       <div className="max-w-7xl mx-auto">
-        {/* Header Section */}
-        <div className="mb-6">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between">
-            <div>
-              <div className="flex items-center space-x-4">
-                <Link to="/" className="inline-flex items-center px-3 py-1 border border-transparent text-xs font-medium rounded text-white bg-gray-600 hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
-                  Back to Home
-                </Link>
-                <h1 className="text-2xl md:text-3xl font-bold text-gray-800">Subscription Management</h1>
-              </div>
-              <p className="text-gray-600 mt-1">Manage all user subscriptions and their statuses</p>
-            </div>
-            <div className="flex flex-col md:flex-row md:items-center md:space-x-3 mt-4 md:mt-0 space-y-2 md:space-y-0">
-              {hasChanges && (
-                <div className="flex space-x-2">
-                  <button
-                    onClick={handleSaveChanges}
-                    disabled={updateLoading}
-                    className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {updateLoading ? (
-                      <>
-                        <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                        </svg>
-                        Saving...
-                      </>
-                    ) : 'Save Changes'}
-                  </button>
-                  <button
-                    onClick={() => setModifiedSubscriptions({})}
-                    className="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                  >
-                    Cancel
-                  </button>
-                </div>
-              )}
-              <button
-                onClick={() => setShowCancelForm(!showCancelForm)}
-                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
-              >
-                {showCancelForm ? 'Hide Cancel Form' : 'Cancel Deliveries'}
-              </button>
-            </div>
-          </div>
-          <div className="border-b border-gray-200 mt-4"></div>
+       {/* Header Section */}
+<div className="mb-6">
+  <div className="flex flex-col md:flex-row md:items-center md:justify-between">
+    <div>
+      <div className="flex items-center space-x-4">
+        <Link to="/" className="inline-flex items-center px-3 py-1 border border-transparent text-xs font-medium rounded text-white bg-gray-600 hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
+          Back to Home
+        </Link>
+        <h1 className="text-2xl md:text-3xl font-bold text-gray-800">Subscription Management</h1>
+      </div>
+      <p className="text-gray-600 mt-1">Manage all user subscriptions and their statuses</p>
+    </div>
+    <div className="flex flex-col md:flex-row md:items-center md:space-x-3 mt-4 md:mt-0 space-y-2 md:space-y-0">
+      {/* New Deliveries Status Button */}
+      <Link 
+        to="/admin-all-deliveries"
+        className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+        </svg>
+        Deliveries Status
+      </Link>
+      <Link 
+        to="/admin-all-deliveriesboidetails"
+        className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+      >
+         <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+          <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
+        </svg>
+        Delivery boys profiles
+      </Link>
+
+      {hasChanges && (
+        <div className="flex space-x-2">
+          <button
+            onClick={handleSaveChanges}
+            disabled={updateLoading}
+            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {updateLoading ? (
+              <>
+                <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Saving...
+              </>
+            ) : 'Save Changes'}
+          </button>
+          <button
+            onClick={() => setModifiedSubscriptions({})}
+            className="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+          >
+            Cancel
+          </button>
         </div>
+      )}
+      <button
+        onClick={() => setShowCancelForm(!showCancelForm)}
+        className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+      >
+        {showCancelForm ? 'Hide Cancel Form' : 'Cancel Deliveries'}
+      </button>
+    </div>
+  </div>
+  <div className="border-b border-gray-200 mt-4"></div>
+</div>
 
         {/* Delivery Cancellation Form */}
         {showCancelForm && (
@@ -391,14 +411,26 @@ const SubscriptionManagement = () => {
             <div className="md:hidden space-y-4">
               {paginatedData.map((subscription) => (
                 <div key={subscription._id} className="bg-white p-4 rounded-lg shadow">
-                  <div className="flex justify-between items-start">
+                  <div className="grid grid-cols-2 gap-4">
                     <div>
                       <p className="text-xs font-medium text-gray-500">Subscription ID</p>
-                      <p className="text-xs text-gray-900 truncate w-32">{subscription._id}</p>
+                      <p className="text-xs text-gray-900 truncate">{subscription._id}</p>
                     </div>
-                    <div className="text-right">
+                    <div>
+                      <p className="text-xs font-medium text-gray-500">Type</p>
+                      <p className="text-xs text-gray-900">{subscription.paymentMethod}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs font-medium text-gray-500">Payment Proof</p>
+                      <p className="text-xs text-gray-900 truncate">
+                        {subscription.paymentProof?.utr || 'N/A'}
+                      </p>
+                    </div>
+                    <div>
                       <p className="text-xs font-medium text-gray-500">User</p>
-                      <p className="text-xs text-gray-900">{subscription.user?.name || 'N/A'}</p>
+                      <p className="text-xs text-gray-900 truncate">
+                        {subscription.user?.name || 'N/A'}
+                      </p>
                     </div>
                   </div>
                   
@@ -484,6 +516,8 @@ const SubscriptionManagement = () => {
                   <thead className="bg-gray-50">
                     <tr>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Subscription ID</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Payment Proof</th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User</th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Subscription</th>
                       <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Payment Status</th>
@@ -494,7 +528,15 @@ const SubscriptionManagement = () => {
                   <tbody className="bg-white divide-y divide-gray-200">
                     {paginatedData.map((subscription) => (
                       <tr key={subscription._id} className="hover:bg-gray-50">
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{subscription._id}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                          {subscription._id}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                          {subscription.paymentMethod}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                          {subscription.paymentProof?.utr || 'N/A'}
+                        </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                           <div className="flex items-center">
                             <div className="flex-shrink-0 h-10 w-10 bg-indigo-100 rounded-full flex items-center justify-center">
@@ -503,14 +545,22 @@ const SubscriptionManagement = () => {
                               </span>
                             </div>
                             <div className="ml-4">
-                              <div className="text-sm font-medium text-gray-900">{subscription.user?.name || 'N/A'}</div>
-                              <div className="text-sm text-gray-500">{subscription.user?.email || ''}</div>
+                              <div className="text-sm font-medium text-gray-900">
+                                {subscription.user?.name || 'N/A'}
+                              </div>
+                              <div className="text-sm text-gray-500">
+                                {subscription.user?.email || ''}
+                              </div>
                             </div>
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          <div className="text-sm font-medium text-gray-900">{subscription.product?.name || 'N/A'}</div>
-                          <div className="text-sm text-gray-500">{subscription.totalPrice || '0.00'} / month</div>
+                          <div className="text-sm font-medium text-gray-900">
+                            {subscription.product?.name || 'N/A'}
+                          </div>
+                          <div className="text-sm text-gray-500">
+                            {subscription.totalPrice || '0.00'} / month
+                          </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-center">
                           <select
@@ -543,13 +593,31 @@ const SubscriptionManagement = () => {
                           >
                             {deletingId === subscription._id ? (
                               <>
-                                <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-red-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                <svg
+                                  className="animate-spin -ml-1 mr-2 h-4 w-4 text-red-600"
+                                  xmlns="http://www.w3.org/2000/svg"
+                                  fill="none"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <circle
+                                    className="opacity-25"
+                                    cx="12"
+                                    cy="12"
+                                    r="10"
+                                    stroke="currentColor"
+                                    strokeWidth="4"
+                                  ></circle>
+                                  <path
+                                    className="opacity-75"
+                                    fill="currentColor"
+                                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                                  ></path>
                                 </svg>
                                 Deleting...
                               </>
-                            ) : 'Delete'}
+                            ) : (
+                              'Delete'
+                            )}
                           </button>
                         </td>
                       </tr>

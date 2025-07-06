@@ -7,7 +7,7 @@ export const upsertUserInfo = async (req, res) => {
     const userId = req.user.id;
 
     // Validate required fields
-    if (!fullName || !phone || !address) {
+    if (!fullName || !phone || !address ) {
       return res.status(400).json({
         success: false,
         message: 'Full name, phone, and address are required fields'
@@ -15,7 +15,7 @@ export const upsertUserInfo = async (req, res) => {
     }
 
     // Validate address structure
-    if (!address.street || !address.area || !address.city || !address.state || !address.pincode) {
+    if (!address.street || !address.area || !address.city || !address.state || !address.pincode || !address.googleMapLink) {
       return res.status(400).json({
         success: false,
         message: 'Address must include street, area, city, state, and pincode'

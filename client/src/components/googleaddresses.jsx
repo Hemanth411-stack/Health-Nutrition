@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { GoogleMap, Marker, Circle, useJsApiLoader } from "@react-google-maps/api";
+import { GoogleMap, Marker, useJsApiLoader } from "@react-google-maps/api";
 
 // API Keys (should be moved to environment variables in production)
 const LOCATIONIQ_TOKEN = "pk.2facabff1fbb7c3da67ac5b80179b3e3";
@@ -14,13 +14,6 @@ const containerStyle = {
   borderRadius: "8px",
 };
 
-// Accuracy thresholds in meters
-const ACCURACY_LEVELS = {
-  HIGH: 30,    // ~GPS accuracy
-  MEDIUM: 100,  // ~WiFi accuracy
-  LOW: 5000     // ~Cell tower/IP accuracy
-};
-
 const LocationMap = () => {
   // State management
   const [coords, setCoords] = useState(null);
@@ -28,8 +21,6 @@ const LocationMap = () => {
   const [searchAddress, setSearchAddress] = useState("");
   const [suggestions, setSuggestions] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [accuracy, setAccuracy] = useState(null);
-  const [accuracyLevel, setAccuracyLevel] = useState("HIGH");
   const [locationMethod, setLocationMethod] = useState(null);
   const [lastUpdated, setLastUpdated] = useState(null);
 
@@ -56,11 +47,9 @@ const LocationMap = () => {
       // Try high-accuracy GPS first
       try {
         const gpsPosition = await getGeoLocationPosition({ highAccuracy: true });
-        if (gpsPosition.accuracy <= ACCURACY_LEVELS[accuracyLevel]) {
-          setLocationMethod("High Accuracy GPS");
-          updatePosition(gpsPosition);
-          return;
-        }
+        setLocationMethod("High Accuracy GPS");
+        updatePosition(gpsPosition);
+        return;
       } catch (gpsError) {
         console.log("High accuracy GPS failed, trying standard accuracy");
       }
@@ -68,11 +57,9 @@ const LocationMap = () => {
       // Try standard accuracy GPS
       try {
         const gpsPosition = await getGeoLocationPosition({ highAccuracy: false });
-        if (gpsPosition.accuracy <= ACCURACY_LEVELS[accuracyLevel] * 1.5) {
-          setLocationMethod("Standard GPS");
-          updatePosition(gpsPosition);
-          return;
-        }
+        setLocationMethod("Standard GPS");
+        updatePosition(gpsPosition);
+        return;
       } catch (standardGpsError) {
         console.log("Standard GPS failed, trying WiFi positioning");
       }
@@ -105,8 +92,7 @@ const LocationMap = () => {
           clearTimeout(timer);
           resolve({
             lat: pos.coords.latitude,
-            lng: pos.coords.longitude,
-            accuracy: pos.coords.accuracy
+            lng: pos.coords.longitude
           });
         },
         (err) => {
@@ -136,8 +122,7 @@ const LocationMap = () => {
       const data = await response.json();
       return {
         lat: data.location.lat,
-        lng: data.location.lng,
-        accuracy: data.accuracy
+        lng: data.location.lng
       };
     } catch (error) {
       console.error("WiFi positioning failed:", error);
@@ -148,8 +133,7 @@ const LocationMap = () => {
       const ipData = await ipResponse.json();
       return {
         lat: parseFloat(ipData.lat),
-        lng: parseFloat(ipData.lon),
-        accuracy: 5000 // Typical IP-based accuracy
+        lng: parseFloat(ipData.lon)
       };
     }
   };
@@ -157,7 +141,6 @@ const LocationMap = () => {
   // Update position state
   const updatePosition = (position) => {
     setCoords({ lat: position.lat, lng: position.lng });
-    setAccuracy(position.accuracy);
   };
 
   // Reverse geocoding to get address
@@ -208,7 +191,6 @@ const LocationMap = () => {
     setAddress(sugg.label);
     setSearchAddress(sugg.label);
     setSuggestions([]);
-    setAccuracy(25); // Assume manual selection is precise
     setLocationMethod("Manual Selection");
   };
 
@@ -217,16 +199,8 @@ const LocationMap = () => {
     const newLat = e.latLng.lat();
     const newLng = e.latLng.lng();
     setCoords({ lat: newLat, lng: newLng });
-    setAccuracy(10); // Manual map selection is very precise
     setLocationMethod("Map Selection");
     await fetchAddress(newLat, newLng);
-  };
-
-  // Get accuracy color based on level
-  const getAccuracyColor = (accuracy) => {
-    if (accuracy <= ACCURACY_LEVELS.HIGH) return "#4CAF50"; // Green
-    if (accuracy <= ACCURACY_LEVELS.MEDIUM) return "#FFC107"; // Yellow
-    return "#F44336"; // Red
   };
 
   return (
@@ -234,24 +208,6 @@ const LocationMap = () => {
       <h2 style={{ color: "#333", marginBottom: "20px" }}>Location Finder</h2>
 
       <div style={{ marginBottom: "20px" }}>
-        <div style={{ marginBottom: "15px", display: "flex", alignItems: "center" }}>
-          <label style={{ marginRight: "10px", fontWeight: "500" }}>Accuracy Preference:</label>
-          <select 
-            value={accuracyLevel}
-            onChange={(e) => setAccuracyLevel(e.target.value)}
-            style={{ 
-              padding: "8px 12px",
-              borderRadius: "4px",
-              border: "1px solid #ddd",
-              backgroundColor: "#f9f9f9"
-            }}
-          >
-            <option value="HIGH">High Precision (GPS)</option>
-            <option value="MEDIUM">Medium Precision (WiFi)</option>
-            <option value="LOW">Low Precision (IP/Cell)</option>
-          </select>
-        </div>
-
         <div style={{ position: "relative", marginBottom: "15px" }}>
           <div style={{ display: "flex", gap: "10px" }}>
             <input
@@ -351,7 +307,7 @@ const LocationMap = () => {
             padding: "15px",
             borderRadius: "8px",
             marginBottom: "15px",
-            borderLeft: `4px solid ${getAccuracyColor(accuracy)}`
+            borderLeft: "4px solid #4285F4"
           }}>
             <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px" }}>
               <div>
@@ -368,19 +324,13 @@ const LocationMap = () => {
               <div>
                 <strong style={{ color: "#555" }}>Longitude:</strong> {coords.lng.toFixed(6)}
               </div>
-              <div>
-                <strong style={{ color: "#555" }}>Accuracy:</strong> 
-                <span style={{ color: getAccuracyColor(accuracy), fontWeight: "600" }}>
-                  {" "}~{Math.round(accuracy)} meters
-                </span>
-              </div>
             </div>
             <div style={{ marginTop: "10px" }}>
               <strong style={{ color: "#555" }}>Address:</strong> {address}
             </div>
           </div>
 
-          <div style={{ display: "flex", gap: "10px", marginBottom: "15px" }}>
+          <div style={{ marginBottom: "15px" }}>
             <a
               href={`https://maps.google.com/?q=${coords.lat},${coords.lng}`}
               target="_blank"
@@ -404,26 +354,6 @@ const LocationMap = () => {
                 <line x1="10" y1="14" x2="21" y2="3"></line>
               </svg>
             </a>
-            <button 
-              onClick={getCurrentLocation}
-              style={{ 
-                padding: "8px 12px",
-                backgroundColor: "#f1f3f4",
-                border: "1px solid #dadce0",
-                borderRadius: "4px",
-                cursor: "pointer",
-                fontSize: "14px",
-                display: "inline-flex",
-                alignItems: "center",
-                gap: "5px"
-              }}
-            >
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                <circle cx="12" cy="12" r="3"></circle>
-              </svg>
-              <span>Refresh Location</span>
-            </button>
           </div>
 
           {isLoaded && (
@@ -448,26 +378,13 @@ const LocationMap = () => {
                 position={coords} 
                 icon={{
                   path: "M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z",
-                  fillColor: getAccuracyColor(accuracy),
+                  fillColor: "#4285F4",
                   fillOpacity: 1,
                   strokeColor: "#fff",
                   strokeWeight: 1,
                   scale: 1.5
                 }}
               />
-              {accuracy && (
-                <Circle
-                  center={coords}
-                  radius={accuracy}
-                  options={{
-                    fillColor: getAccuracyColor(accuracy),
-                    fillOpacity: 0.1,
-                    strokeColor: getAccuracyColor(accuracy),
-                    strokeOpacity: 0.5,
-                    strokeWeight: 1,
-                  }}
-                />
-              )}
             </GoogleMap>
           )}
         </div>

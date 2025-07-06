@@ -5,32 +5,38 @@ import verifydelivery from '../models/verifydelivery.js';
 // Create new delivery verification request
 export const createDeliveryVerification = async (req, res) => {
   try {
+    console.log("Incoming request body:", req.body); // Debug log
+    
     const { address } = req.body;
     const userId = req.user._id;
 
-    // Validate required fields with more detailed error messages
+    // Validate required fields
     const requiredFields = ['street', 'area', 'city', 'state', 'pincode'];
-    const missingFields = requiredFields.filter(field => !address[field]);
+    const missingFields = requiredFields.filter(field => !address?.[field]);
     
     if (missingFields.length > 0) {
       return res.status(400).json({ 
+        success: false,
         message: 'Missing required address fields',
         missingFields,
         receivedData: address
       });
     }
 
-    // Validate pincode format (6 digits)
-    if (!/^\d{6}$/.test(address.pincode)) {
+    // Validate pincode format (6 or 7 digits)
+    if (!/^\d{6,7}$/.test(address.pincode)) {
       return res.status(400).json({ 
-        message: 'Pincode must be 6 digits' 
+        success: false,
+        message: 'Pincode must be 6 or 7 digits' 
       });
     }
 
-    // Check if user exists
-    const user = await User.findById(userId);
-    if (!user) {
-      return res.status(404).json({ message: 'User not found' });
+    // Validate Google Maps link if provided
+    if (address.googleMapLink && !/^(https?:\/\/)?(www\.)?google\.[a-z]+\/maps/.test(address.googleMapLink)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid Google Maps link format'
+      });
     }
 
     // Check for existing pending verification
@@ -41,7 +47,8 @@ export const createDeliveryVerification = async (req, res) => {
 
     if (existingVerification) {
       return res.status(400).json({ 
-        message: 'You already have a pending delivery verification',
+        success: false,
+        message: 'You already have a pending verification',
         existingVerificationId: existingVerification._id
       });
     }
@@ -55,27 +62,27 @@ export const createDeliveryVerification = async (req, res) => {
         city: address.city,
         state: address.state,
         pincode: address.pincode,
-        type: address.type || 'Home'  // Default to 'Home' if not provided
+        type: address.type || 'Home',
+        googleMapLink: address.googleMapLink
       },
-      verifydeliverystatus: 'pending'
+      verifydeliverystatus: 'pending',
+      deliveryCharge: address.deliveryCharge || 0
     });
 
     const savedVerification = await newVerification.save();
 
-    // Return the complete verification data
-    res.status(201).json({
+    return res.status(201).json({
       success: true,
-      message: 'Delivery verification request created successfully',
+      message: 'Verification created successfully',
       data: savedVerification
     });
 
   } catch (error) {
-    console.error('Error in createDeliveryVerification:', error);
-    res.status(500).json({ 
+    console.error('Server error:', error);
+    return res.status(500).json({ 
       success: false,
-      message: 'Error creating delivery verification',
-      error: error.message,
-      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+      message: 'Server error during verification creation',
+      error: error.message
     });
   }
 };

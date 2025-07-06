@@ -19,6 +19,16 @@ const deliverySchema = new mongoose.Schema({
     city: { type: String, required: true },
     state: { type: String, required: true },
     pincode: { type: String, required: true },
+    googleMapLink: {  // New field for Google Maps location
+      type: String,
+      validate: {
+        validator: function(v) {
+          // Basic validation for Google Maps URL
+          return /^(https?:\/\/)?(www\.)?google\.[a-z]+\/maps/.test(v);
+        },
+        message: props => `${props.value} is not a valid Google Maps link!`
+      }
+    }
   },
 
   slot: {

@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { FaTruck,FaSignOutAlt , FaSignInAlt ,FaCalendarAlt, FaMapMarkerAlt, FaCheck, FaTimes, FaExclamation } from 'react-icons/fa';
+import { FaTruck,FaSignOutAlt ,FaUser, FaSignInAlt ,FaCalendarAlt, FaMapMarkerAlt, FaCheck, FaTimes, FaExclamation } from 'react-icons/fa';
 import { useDispatch, useSelector } from 'react-redux';
 import {selectDeliveryBoyToken} from '../Redux/Slices/deliveryboi'
 import { Link } from 'react-router-dom';
@@ -22,16 +22,22 @@ const DeliveryManagement = () => {
     updateError
   } = useSelector(state => state.deliveriesmanagement);
 const navigate = useNavigate();
-
+  console.log("deliveries with google maplink",deliveries)
   const [filter, setFilter] = useState('all');
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
     const token = useSelector(selectDeliveryBoyToken);
 
   // Fetch deliveries on component mount and when selectedDate changes
-  useEffect(() => {
-    dispatch(fetchAllDeliveries());
-  }, [dispatch, selectedDate]);
-
+useEffect(() => {
+  dispatch(fetchAllDeliveries())
+    .unwrap()
+    .then((data) => {
+      console.log('Fetched deliveries:', data);
+    })
+    .catch((err) => {
+      console.error('Error fetching deliveries:', err);
+    });
+}, [dispatch, selectedDate]);
   // Clear errors when component unmounts
   useEffect(() => {
     return () => {
@@ -51,9 +57,15 @@ const handleLogout = () => {
     return matchesFilter && matchesDate;
   });
 
-  const handleStatusUpdate = (deliveryId, newStatus) => {
-    dispatch(updateDeliveryStatus({ deliveryId, status: newStatus }));
-  };
+  const handleStatusUpdate = async (deliveryId, newStatus) => {
+  try {
+    await dispatch(updateDeliveryStatus({ deliveryId, status: newStatus })).unwrap();
+    // Optional: Add a success notification
+  } catch (error) {
+    console.error('Status update failed:', error);
+    // Error is already handled by Redux
+  }
+};
 
   const getStatusIcon = (status) => {
     switch (status) {
@@ -69,51 +81,64 @@ const handleLogout = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <header className="bg-white shadow-sm">
-      <div className="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8 flex justify-between items-center">
-        <h1 className="text-2xl font-bold text-gray-900">
-          <FaTruck className="inline mr-2" />
-          Delivery Management
-        </h1>
-        <div className="flex items-center space-x-4">
-          <input
-            type="date"
-            value={selectedDate}
-            onChange={(e) => setSelectedDate(e.target.value)}
-            className="border rounded-md px-3 py-2 text-sm"
-          />
-          <select
-            value={filter}
-            onChange={(e) => setFilter(e.target.value)}
-            className="border rounded-md px-3 py-2 text-sm"
-          >
-            <option value="all">All Deliveries</option>
-            <option value="pending">Pending</option>
-            <option value="delivered">Delivered</option>
-            <option value="missed">Missed</option>
-          </select>
+    
+<header className="bg-white shadow-sm">
+  <div className="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8 flex justify-between items-center">
+    <h1 className="text-2xl font-bold text-gray-900">
+      <FaTruck className="inline mr-2" />
+      Delivery Management
+    </h1>
+    <div className="flex items-center space-x-4">
+      <input
+        type="date"
+        value={selectedDate}
+        onChange={(e) => setSelectedDate(e.target.value)}
+        className="border rounded-md px-3 py-2 text-sm"
+      />
+      <select
+        value={filter}
+        onChange={(e) => setFilter(e.target.value)}
+        className="border rounded-md px-3 py-2 text-sm"
+      >
+        <option value="all">All Deliveries</option>
+        <option value="pending">Pending</option>
+        <option value="delivered">Delivered</option>
+        <option value="missed">Missed</option>
+      </select>
 
-          {/* Conditional rendering based on authentication */}
-          {token ? (
-            <button
-              onClick={handleLogout}
-              className="flex items-center space-x-1 text-sm font-medium text-red-600 hover:text-red-800"
-            >
-              <FaSignOutAlt className="inline mr-1" />
-              Logout
-            </button>
-          ) : (
-            <Link
-              to="/login-deliverboi" // Update with your login route
-              className="flex items-center space-x-1 text-sm font-medium text-blue-600 hover:text-blue-800"
-            >
-              <FaSignInAlt className="inline mr-1" />
-              Sign In
-            </Link>
-          )}
-        </div>
-      </div>
-    </header>
+      {/* Profile Button - Only shown when logged in */}
+      {token && (
+        <button
+          onClick={() => navigate('/deliveryboi-profile')}
+          className="flex items-center space-x-1 text-sm font-medium text-gray-700 hover:text-blue-600"
+          title="Profile"
+        >
+          <FaUser className="inline mr-1" />
+          Profile
+        </button>
+      )}
+
+      {/* Conditional rendering based on authentication */}
+      {token ? (
+        <button
+          onClick={handleLogout}
+          className="flex items-center space-x-1 text-sm font-medium text-red-600 hover:text-red-800"
+        >
+          <FaSignOutAlt className="inline mr-1" />
+          Logout
+        </button>
+      ) : (
+        <Link
+          to="/login-deliverboi"
+          className="flex items-center space-x-1 text-sm font-medium text-blue-600 hover:text-blue-800"
+        >
+          <FaSignInAlt className="inline mr-1" />
+          Sign In
+        </Link>
+      )}
+    </div>
+  </div>
+</header>
 
       {/* Error Messages */}
       {error && (
@@ -169,6 +194,20 @@ const handleLogout = () => {
                         <h3 className="text-lg font-medium text-gray-900">
                           {delivery.userInfo?.fullName || 'Unknown User'}
                         </h3>
+                        <h3 className="text-lg font-medium text-gray-900">
+  {delivery.userInfo?.googleMapLink ? (
+    <a 
+      href={delivery.userInfo.googleMapLink} 
+      target="_blank" 
+      rel="noopener noreferrer"
+      className="text-blue-600 hover:text-blue-800 hover:underline"
+    >
+      Customer Address Map
+    </a>
+  ) : (
+    'Address Map Not Available'
+  )}
+</h3>
                         <p className="text-sm text-gray-500">
                           {delivery.userInfo?.phone || 'No phone number'}
                         </p>

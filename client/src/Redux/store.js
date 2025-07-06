@@ -110,7 +110,7 @@ const userPersistConfig = {
 const deliveryBoyPersistConfig = {
   key: 'deliveryBoyAuth',
   storage,
-  whitelist: ['token'] // Only persist the token field from delivery boy slice
+  whitelist: ['token',"deliveryBoy"] // Only persist the token field from delivery boy slice
 };
 
 const rootReducer = combineReducers({

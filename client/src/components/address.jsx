@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FiPlus, FiChevronRight, FiCheck, FiClock, FiX } from 'react-icons/fi';
 import { useDispatch, useSelector } from 'react-redux';
 import { 
@@ -7,7 +7,21 @@ import {
   resetVerificationState
 } from '../Redux/Slices/deliverystatusmanagement.js';
 import { toast } from 'react-toastify';
-import Header from "../components/Header.jsx"
+import Header from "../components/Header.jsx";
+import { GoogleMap, Marker, useJsApiLoader } from "@react-google-maps/api";
+
+// API Keys (should be moved to environment variables in production)
+const GOOGLE_MAP_API_KEY = "AIzaSyAMPrwC9ii-4QvIRA_75CbxSp-6keDC6aM";
+
+// Map container styles
+const containerStyle = {
+  width: "100%",
+  height: "300px",
+  marginTop: "20px",
+  border: "1px solid #ccc",
+  borderRadius: "8px",
+};
+
 const AddressManagement = () => {
   const dispatch = useDispatch();
   const { 
@@ -30,6 +44,19 @@ const AddressManagement = () => {
   });
   const [editingId, setEditingId] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [coords, setCoords] = useState(null);
+  const [address, setAddress] = useState("");
+  const [searchAddress, setSearchAddress] = useState("");
+  const [suggestions, setSuggestions] = useState([]);
+  const [locationLoading, setLocationLoading] = useState(false);
+  const [locationMethod, setLocationMethod] = useState(null);
+  const [lastUpdated, setLastUpdated] = useState(null);
+
+  // Load Google Maps API
+  const { isLoaded } = useJsApiLoader({
+    googleMapsApiKey: GOOGLE_MAP_API_KEY,
+    libraries: ["places"],
+  });
 
   // Safely handle null/undefined myVerification
   const addressList = Array.isArray(myVerification) ? myVerification : [];
@@ -61,15 +88,94 @@ const AddressManagement = () => {
     }
   }, [error, success, dispatch, editingId]);
 
+  // Fetch address when coordinates change
+  useEffect(() => {
+    if (coords) {
+      setLastUpdated(new Date());
+    }
+  }, [coords]);
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
+  // Main location acquisition function
+ // Main location acquisition function - Updated version
+// Updated getCurrentLocation function
+const getCurrentLocation = async () => {
+  setLocationLoading(true);
+  setLocationMethod(null);
+  
+  try {
+    if (navigator.geolocation) {
+      const position = await new Promise((resolve, reject) => {
+        navigator.geolocation.getCurrentPosition(resolve, reject, {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 0
+        });
+      });
+
+      const newCoords = {
+        lat: position.coords.latitude,
+        lng: position.coords.longitude
+      };
+
+      setCoords(newCoords);
+      setLocationMethod("GPS");
+
+      // Use LocationIQ for reverse geocoding (more reliable than Google for address components)
+      try {
+        const LOCATIONIQ_TOKEN = "pk.2facabff1fbb7c3da67ac5b80179b3e3"; // Your LocationIQ token
+        const response = await fetch(
+          `https://us1.locationiq.com/v1/reverse.php?key=${LOCATIONIQ_TOKEN}&lat=${newCoords.lat}&lon=${newCoords.lng}&format=json`
+        );
+        const data = await response.json();
+        
+        if (data.address) {
+          const addr = data.address;
+          setFormData({
+            street: addr.road || addr.pedestrian || addr.footway || '',
+            area: addr.suburb || addr.neighbourhood || addr.quarter || '',
+            city: addr.city || addr.town || addr.village || addr.county || '',
+            state: addr.state || addr.region || '',
+            pincode: addr.postcode || '',
+            type: formData.type // Keep existing type
+          });
+        }
+      } catch (geocodeError) {
+        console.error("Geocoding error:", geocodeError);
+        toast.info("Got your location but couldn't fetch full address details");
+      }
+
+      return newCoords;
+    } else {
+      throw new Error("Geolocation is not supported by this browser.");
+    }
+  } catch (error) {
+    console.error("Location error:", error);
+    toast.error("Couldn't get precise location. Please try manual selection.");
+    return null;
+  } finally {
+    setLocationLoading(false);
+  }
+};
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
     
+    // Generate Google Maps link
+    let googleMapsLink = "";
+    if (coords) {
+      googleMapsLink = `https://www.google.com/maps?q=${coords.lat},${coords.lng}`;
+    } else {
+      // Fallback to address-based link if coordinates not available
+      const addressString = `${formData.street}, ${formData.area}, ${formData.city}, ${formData.state} ${formData.pincode}`;
+      googleMapsLink = `https://www.google.com/maps?q=${encodeURIComponent(addressString)}`;
+    }
+
     const addressData = {
       address: {
         street: formData.street,
@@ -77,12 +183,17 @@ const AddressManagement = () => {
         city: formData.city,
         state: formData.state,
         pincode: formData.pincode,
-        type: formData.type
-      }
+        type: formData.type,
+        googleMapLink: googleMapsLink,
+      },
+      
+      
+      
     };
 
     try {
       if (editingId) {
+        console.log("address data with google map link",addressData)
         await dispatch(createDeliveryVerification({
           ...addressData,
           id: editingId
@@ -105,6 +216,17 @@ const AddressManagement = () => {
       pincode: '',
       type: 'Home'
     });
+    setCoords(null);
+    setAddress("");
+    setSearchAddress("");
+  };
+
+  // Handle map clicks
+  const handleMapClick = async (e) => {
+    const newLat = e.latLng.lat();
+    const newLng = e.latLng.lng();
+    setCoords({ lat: newLat, lng: newLng });
+    setLocationMethod("Map Selection");
   };
 
   // Safely check for pending verifications
@@ -161,6 +283,16 @@ const AddressManagement = () => {
                       <p className="text-gray-600 text-sm">
                         {address.address?.area}, {address.address?.city} - {address.address?.pincode}
                       </p>
+                      {address.googleMapsLink && (
+                        <a 
+                          href={address.googleMapsLink} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="text-blue-500 text-xs mt-1 inline-block hover:underline"
+                        >
+                          View on Google Maps
+                        </a>
+                      )}
                     </div>
                     <button 
                       onClick={() => {
@@ -172,12 +304,15 @@ const AddressManagement = () => {
                           pincode: address.address?.pincode || '',
                           type: address.address?.type || 'Home'
                         });
+                        if (address.coordinates) {
+                          setCoords(address.coordinates);
+                        }
                         setEditingId(address._id);
                         setShowForm(true);
                       }}
                       className="text-gray-400 hover:text-orange-500 ml-2"
                     >
-                      {/* <FiChevronRight size={20} /> */}
+                      <FiChevronRight size={20} />
                     </button>
                   </div>
                 </div>
@@ -337,6 +472,64 @@ const AddressManagement = () => {
                       disabled={isSubmitting}
                     />
                   </div>
+                </div>
+
+                {/* Map Section */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Location Pin</label>
+                  <div className="flex items-center gap-2 mb-2">
+                    <button
+                      type="button"
+                      onClick={getCurrentLocation}
+                      disabled={locationLoading || isSubmitting}
+                      className={`px-3 py-2 text-sm rounded-md border ${
+                        locationLoading 
+                          ? 'bg-gray-100 text-gray-500 cursor-not-allowed'
+                          : 'bg-white border-gray-300 hover:bg-gray-50'
+                      }`}
+                    >
+                      {locationLoading ? 'Locating...' : 'Use Current Location'}
+                    </button>
+                    {locationMethod && (
+                      <span className="text-xs text-gray-500">
+                        ({locationMethod} - {lastUpdated?.toLocaleTimeString()})
+                      </span>
+                    )}
+                  </div>
+                  
+                  {isLoaded && (
+                    <GoogleMap
+                      mapContainerStyle={containerStyle}
+                      center={coords || { lat: 20.5937, lng: 78.9629 }} // Default to India center
+                      zoom={coords ? 15 : 5}
+                      onClick={handleMapClick}
+                      options={{
+                        streetViewControl: false,
+                        mapTypeControl: false,
+                        fullscreenControl: false,
+                        styles: [
+                          {
+                            featureType: "poi",
+                            stylers: [{ visibility: "off" }]
+                          }
+                        ]
+                      }}
+                    >
+                      {coords && (
+                        <Marker 
+                          position={coords} 
+                          icon={{
+                            path: "M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z",
+                            fillColor: "#4285F4",
+                            fillOpacity: 1,
+                            strokeColor: "#fff",
+                            strokeWeight: 1,
+                            scale: 1.5
+                          }}
+                        />
+                      )}
+                    </GoogleMap>
+                  )}
                 </div>
               </div>
 

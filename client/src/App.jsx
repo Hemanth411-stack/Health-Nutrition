@@ -15,6 +15,9 @@ import AdminDashboard from "./components/admindashboard.jsx";
 import DeliveryBoyRegister from "./components/deliveryboiregister.jsx";
 import DeliveryBoyLogin from "./components/deliveryboilogin.jsx";
 import LocationCapture from "./components/googleaddresses.jsx";
+import ProfileComponent from "./components/deliveryboiprofile.jsx";
+import AllDeliveries from "./components/adminalldeliveries.jsx";
+import Deliveryboidetails from "./components/deliveryboidetails.jsx";
 
 function App() {
   return (
@@ -36,6 +39,9 @@ function App() {
       <Route path="/delivery-boi-register" element={<DeliveryBoyRegister />} />
       <Route path="/login-deliverboi" element={<DeliveryBoyLogin />} />
        <Route path="/google-addresses" element={<LocationCapture />} />
+        <Route path="/deliveryboi-profile" element={<ProfileComponent />} />
+        <Route path="/admin-all-deliveries" element={<AllDeliveries />} />
+        <Route path="/admin-all-deliveriesboidetails" element={<Deliveryboidetails />} />
     </Routes>
   );
 }

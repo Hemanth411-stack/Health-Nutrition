@@ -153,7 +153,8 @@ const scheduleAllDeliveriesForSubscription = async (subscriptionId) => {
       area: userInfo.address.area,
       city: userInfo.address.city,
       state: userInfo.address.state,
-      pincode: userInfo.address.pincode
+      pincode: userInfo.address.pincode,
+      googleMapLink: userInfo.address.googleMapLink || undefined
     };
 
     for (let date = new Date(startDate); date <= endDate; date.setDate(date.getDate() + 1)) {
@@ -237,6 +238,7 @@ export const getallSubscriptions = async (req, res) => {
     res.status(500).json({ message: 'Failed to fetch subscriptions', error: error.message });
   }
 };
+
 export const createSubscription = async (req, res) => {
   try {
     const { 
@@ -288,15 +290,26 @@ export const createSubscription = async (req, res) => {
     };
     const totalAddOnPrice = Object.values(finalAddOnPrices).reduce((sum, price) => sum + price, 0);
 
-    // Set subscription dates
-    const endDate = new Date(startDate);
+    // Calculate end date (1 month minus 1 day from start date)
+    const start = new Date(startDate);
+    const endDate = new Date(start);
+    
+    // Add one month
     endDate.setMonth(endDate.getMonth() + 1);
+    
+    // Subtract one day
+    endDate.setDate(endDate.getDate() - 1);
 
-    // Create subscription (status defaults to 'pending')
+    // Handle special cases where subtracting a day crosses month boundaries
+    if (endDate.getMonth() !== (start.getMonth() + 1) % 12) {
+      endDate.setDate(0); // Set to last day of previous month
+    }
+
+    // Create subscription
     const subscriptionData = {
       user: userId,
       product: productId,
-      startDate,
+      startDate: start,
       endDate,
       addOnPrices: finalAddOnPrices,
       totalPrice: product.price + totalAddOnPrice,
@@ -326,6 +339,7 @@ export const createSubscription = async (req, res) => {
     });
   }
 };
+
 
 export const updateSubscriptionStatus = async (req, res) => {
   try {
@@ -653,5 +667,4 @@ export const getPauseInfo = async (req, res) => {
     });
   }
 };
-
 

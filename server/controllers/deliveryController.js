@@ -38,10 +38,29 @@ export const scheduleDelivery = async (req, res) => {
 // 📌 Get User Deliveries
 export const getUserDeliveries = async (req, res) => {
   try {
-    const deliveries = await Delivery.find({ user: req.user.id }).sort({ deliveryDate: -1 });
+    // Check if user has an active subscription
+    const activeSubscription = await Subscription.findOne({
+      user: req.user.id,
+      status: 'active'
+    });
+
+    if (!activeSubscription) {
+      // Return empty array if no active subscription
+      return res.json([]);
+    }
+
+    // Fetch deliveries only if subscription is active
+    const deliveries = await Delivery.find({ 
+      user: req.user.id,
+      subscription: activeSubscription._id
+    }).sort({ deliveryDate: -1 });
+
     res.json(deliveries);
   } catch (err) {
-    res.status(500).json({ message: 'Error fetching deliveries', error: err.message });
+    res.status(500).json({ 
+      message: 'Error fetching deliveries', 
+      error: err.message 
+    });
   }
 };
 

@@ -18,6 +18,10 @@ const deliveryBoySchema = new mongoose.Schema({
   serviceAreas: {
     type: [String], 
     default: []
+  },
+  profileImage: {
+    type: String,
+    default: null
   }
 }, {
   timestamps: true

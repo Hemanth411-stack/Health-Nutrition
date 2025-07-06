@@ -12,6 +12,7 @@ import {
 } from "../Redux/Slices/subscriptionSlice";
 import { Link } from "react-router-dom";
 import Footer from "./Footer";
+import SubscriptionActions from "./SubscriptionActions";
 
 export const SubscriptionDashboard = () => {
   const [showWelcomeMessage, setShowWelcomeMessage] = useState(true);
@@ -290,7 +291,7 @@ const hasActive = subscriptions.some(sub => sub?.status === 'active');
                         </div>
                       </div>
                     </div>
-
+                  
                     {/* Payment Information */}
                     <div>
                       <h4 className="text-sm font-medium text-gray-500 uppercase tracking-wider mb-3">Payment Information</h4>
@@ -354,7 +355,11 @@ const hasActive = subscriptions.some(sub => sub?.status === 'active');
 
                       </div>
                     </div>
-
+                  <SubscriptionActions
+        subscriptionId={subscription._id}
+        subscriptionStatus={subscription.status}
+        pausedDays={subscription.pausedDays || 0}
+      />
                    
                   </div>
                 </div>

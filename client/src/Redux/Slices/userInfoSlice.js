@@ -27,7 +27,7 @@ export const updateUserInfo = createAsyncThunk(
   async ( userData , { getState, rejectWithValue }) => {
     try {
       const token = getState().user?.userInfo?.token;
-
+      console.log("token and userdata",userData)
       if (!token) {
         return rejectWithValue('No token found');
       }
