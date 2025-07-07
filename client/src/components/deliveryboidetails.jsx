@@ -1,8 +1,8 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useSelector, useDispatch, Provider } from 'react-redux';
 import { createSlice, createAsyncThunk, configureStore } from '@reduxjs/toolkit';
 import axios from 'axios';
-import { UserCircleIcon } from '@heroicons/react/24/solid'; // Using Heroicons for default avatar
+import { UserCircleIcon, XMarkIcon } from '@heroicons/react/24/solid'; // Using Heroicons for default avatar and close button
 
 // ================== REDUX SETUP ================== //
 const API_URL = 'https://health-nutrition-2.onrender.com/api/deliveries/deliveryboi-details';
@@ -61,6 +61,7 @@ const store = configureStore({ reducer: { deliveryBoys: deliveryBoysSlice.reduce
 const DeliveryBoysManagement = () => {
   const dispatch = useDispatch();
   const { list: deliveryBoys, loading, error } = useSelector((state) => state.deliveryBoys);
+  const [selectedImage, setSelectedImage] = useState(null);
 
   useEffect(() => { dispatch(fetchDeliveryBoys()); }, [dispatch]);
 
@@ -88,18 +89,33 @@ const DeliveryBoysManagement = () => {
 
   return (
     <div className="container mx-auto p-4">
+      {/* Image Modal */}
+      {selectedImage && (
+        <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
+          <div className="relative max-w-3xl w-full">
+            <button 
+              onClick={() => setSelectedImage(null)}
+              className="absolute -top-10 right-0 text-white hover:text-gray-300 focus:outline-none"
+            >
+              <XMarkIcon className="h-8 w-8" />
+            </button>
+            <div className="bg-white rounded-lg overflow-hidden">
+              <img 
+                src={selectedImage.url} 
+                alt={selectedImage.name}
+                className="w-full h-auto max-h-[80vh] object-contain"
+              />
+              <div className="p-4 bg-white">
+                <h3 className="text-xl font-semibold">{selectedImage.name}</h3>
+                <p className="text-gray-600">{selectedImage.phone}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-2xl font-bold text-gray-800">Delivery Team</h1>
-        {/* <div className="relative w-64">
-          <input
-            type="text"
-            placeholder="Search delivery boys..."
-            className="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-          <svg className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-          </svg>
-        </div> */}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
@@ -108,15 +124,24 @@ const DeliveryBoysManagement = () => {
             <div className="p-5">
               <div className="flex items-center space-x-4">
                 {boy.profileImage ? (
-                  <img 
-                    src={boy.profileImage} 
-                    alt={boy.name}
-                    className="w-16 h-16 rounded-full object-cover border-2 border-white shadow"
-                    onError={(e) => {
-                      e.target.onerror = null;
-                      e.target.style.display = 'none';
-                    }}
-                  />
+                  <button 
+                    onClick={() => setSelectedImage({
+                      url: boy.profileImage,
+                      name: boy.name,
+                      phone: boy.phone
+                    })}
+                    className="focus:outline-none"
+                  >
+                    <img 
+                      src={boy.profileImage} 
+                      alt={boy.name}
+                      className="w-16 h-16 rounded-full object-cover border-2 border-white shadow cursor-pointer hover:opacity-90 transition-opacity"
+                      onError={(e) => {
+                        e.target.onerror = null;
+                        e.target.style.display = 'none';
+                      }}
+                    />
+                  </button>
                 ) : (
                   <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center">
                     <UserCircleIcon className="h-12 w-12 text-gray-400" />
@@ -145,19 +170,6 @@ const DeliveryBoysManagement = () => {
                   )}
                 </div>
               </div>
-
-              {/* <div className="mt-4 pt-4 border-t border-gray-100 flex justify-between">
-                <button className="text-sm text-blue-600 hover:text-blue-800 font-medium">
-                  View Details
-                </button>
-                <span className={`text-xs px-2 py-1 rounded-full ${
-                  boy.status === 'active' 
-                    ? 'bg-green-100 text-green-800' 
-                    : 'bg-gray-100 text-gray-800'
-                }`}>
-                  {boy.status || 'inactive'}
-                </span>
-              </div> */}
             </div>
           </div>
         ))}
