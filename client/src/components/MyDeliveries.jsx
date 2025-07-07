@@ -195,7 +195,7 @@ const MyDeliveries = () => {
             </div>
 
             {/* Filter dropdown */}
-            <div className="relative w-full sm:w-auto">
+            {/* <div className="relative w-full sm:w-auto">
               <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
                 <Filter className="h-5 w-5 text-gray-400" />
               </div>
@@ -212,7 +212,7 @@ const MyDeliveries = () => {
               <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
                 <ChevronDown className="h-4 w-4 text-gray-400" />
               </div>
-            </div>
+            </div> */}
           </div>
 
           {/* Delivery cards */}
