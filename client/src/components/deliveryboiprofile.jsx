@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { 
@@ -52,6 +52,8 @@ const ProfileComponent = () => {
   const [profileImage, setProfileImage] = useState(null);
   const [previewImage, setPreviewImage] = useState(null);
   const [errors, setErrors] = useState({});
+  const [updateAttempted, setUpdateAttempted] = useState(false);
+  const formRef = useRef(null);
 
   useEffect(() => {
     if (deliveryBoyInfo) {
@@ -60,11 +62,22 @@ const ProfileComponent = () => {
         phone: deliveryBoyInfo.phone || '',
         serviceAreas: deliveryBoyInfo.serviceAreas || []
       });
+      // Set preview image from deliveryBoyInfo if it exists
       if (deliveryBoyInfo.profileImage) {
         setPreviewImage(deliveryBoyInfo.profileImage);
       }
     }
   }, [deliveryBoyInfo]);
+
+  // Scroll to top when status changes to succeeded
+  useEffect(() => {
+    if (status === 'succeeded' && updateAttempted) {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      if (formRef.current) {
+        formRef.current.scrollIntoView({ behavior: 'smooth' });
+      }
+    }
+  }, [status, updateAttempted]);
 
   useEffect(() => {
     return () => {
@@ -97,7 +110,7 @@ const ProfileComponent = () => {
 
   const handleRemoveImage = () => {
     setProfileImage(null);
-    setPreviewImage(null);
+    setPreviewImage(deliveryBoyInfo?.profileImage || null); // Revert to original image if exists
     setErrors(prev => ({ ...prev, profileImage: null }));
   };
 
@@ -151,6 +164,7 @@ const ProfileComponent = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    setUpdateAttempted(true);
     
     if (!validateForm()) return;
     
@@ -160,6 +174,9 @@ const ProfileComponent = () => {
     formDataToSend.append('serviceAreas', JSON.stringify(formData.serviceAreas));
     if (profileImage) {
       formDataToSend.append('profileImage', profileImage);
+    } else if (!previewImage && deliveryBoyInfo?.profileImage) {
+      // If removing existing image
+      formDataToSend.append('removeImage', 'true');
     }
     
     dispatch(updateDeliveryBoyProfile({
@@ -187,7 +204,7 @@ const ProfileComponent = () => {
 
       <main className="max-w-4xl mx-auto px-4 py-6">
         {/* Success/Error messages */}
-        {status === 'succeeded' && (
+        {status === 'succeeded' && updateAttempted && (
           <div className="mb-6 p-4 bg-green-50 text-green-700 rounded-lg border border-green-200">
             Profile updated successfully!
           </div>
@@ -199,7 +216,7 @@ const ProfileComponent = () => {
         )}
 
         <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-          <form onSubmit={handleSubmit} className="p-6">
+          <form onSubmit={handleSubmit} className="p-6" ref={formRef}>
             {/* Profile Image Section */}
             <div className="flex flex-col items-center mb-8">
               <div className="relative mb-4">
