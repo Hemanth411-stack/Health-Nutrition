@@ -38,31 +38,44 @@ export const scheduleDelivery = async (req, res) => {
 // 📌 Get User Deliveries
 export const getUserDeliveries = async (req, res) => {
   try {
-    // Check if user has an active subscription
-    const activeSubscription = await Subscription.findOne({
+    // Get all active subscriptions for the user
+    const activeSubscriptions = await Subscription.find({
       user: req.user.id,
       status: 'active'
     });
 
-    if (!activeSubscription) {
-      // Return empty array if no active subscription
+    if (!activeSubscriptions || activeSubscriptions.length === 0) {
       return res.json([]);
     }
 
-    // Fetch deliveries only if subscription is active
-    const deliveries = await Delivery.find({ 
+    // Extract subscription IDs
+    const subscriptionIds = activeSubscriptions.map(sub => sub._id);
+
+    // Get today's start and end time
+    const today = new Date();
+    const startOfDay = new Date(today.setHours(0, 0, 0, 0));
+    const endOfDay = new Date(today.setHours(23, 59, 59, 999));
+
+    // Fetch deliveries for today linked to any active subscription
+    const deliveries = await Delivery.find({
       user: req.user.id,
-      subscription: activeSubscription._id
+      subscription: { $in: subscriptionIds },
+      deliveryDate: {
+        $gte: startOfDay,
+        $lte: endOfDay
+      }
     }).sort({ deliveryDate: -1 });
 
     res.json(deliveries);
   } catch (err) {
-    res.status(500).json({ 
-      message: 'Error fetching deliveries', 
-      error: err.message 
+    res.status(500).json({
+      message: "Error fetching today's deliveries",
+      error: err.message
     });
   }
 };
+
+
 
 // admin usage
 export const Alldeliveries = async (req, res) => {
