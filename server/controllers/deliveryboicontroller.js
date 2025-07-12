@@ -180,13 +180,16 @@ export const getMyDeliveries = async (req, res) => {
     // 4. Get all unique userIds from deliveries
     const userIds = [...new Set(deliveriesRaw.map(d => d.user.toString()))];
 
-    // 5. Fetch all subscriptions for these users and filter for active ones
+    // 5. Fetch all subscriptions for these users and populate product name
     const allSubscriptions = await Subscription.find({
       user: { $in: userIds }
-    }).lean();
+    })
+      .populate({ path: 'product', select: 'name' })
+      .lean();
 
     // Create a Map of user to their active subscription IDs
     const userActiveSubsMap = new Map();
+    const subscriptionMap = new Map();
     allSubscriptions.forEach(sub => {
       if (sub.status === 'active') {
         const userId = sub.user.toString();
@@ -194,6 +197,7 @@ export const getMyDeliveries = async (req, res) => {
           userActiveSubsMap.set(userId, []);
         }
         userActiveSubsMap.get(userId).push(sub._id.toString());
+        subscriptionMap.set(sub._id.toString(), sub); // Store full subscription for later use
       }
     });
 
@@ -201,7 +205,6 @@ export const getMyDeliveries = async (req, res) => {
     const filteredDeliveries = deliveriesRaw.filter(delivery => {
       const userId = delivery.user.toString();
       const activeSubIds = userActiveSubsMap.get(userId) || [];
-      // Check if delivery's subscription is in the active subscriptions list
       return activeSubIds.includes(delivery.subscription.toString());
     });
 
@@ -217,21 +220,25 @@ export const getMyDeliveries = async (req, res) => {
       userInfoMap[info.user.toString()] = info;
     });
 
-    // 9. Attach fullName and phone to each delivery
+    // 9. Attach user info + product name to each delivery
     const deliveries = filteredDeliveries.map(delivery => {
       const info = userInfoMap[delivery.user.toString()];
+      const subscription = subscriptionMap.get(delivery.subscription.toString());
+      const productName = subscription?.product?.name || null;
+
       return {
         ...delivery,
+        productName,
         userInfo: info ? {
           fullName: info.fullName,
           phone: info.phone,
-          googleMapLink: info.address.googleMapLink,
+          googleMapLink: info.address?.googleMapLink,
         } : null
       };
     });
 
     console.log("Filtered deliveries with active subscriptions:", deliveries);
-    
+
     // 10. Return enriched data
     res.status(200).json({
       message: "Today's deliveries fetched successfully",
@@ -247,6 +254,7 @@ export const getMyDeliveries = async (req, res) => {
     });
   }
 };
+
 
 export const getalldeliveriesinformation = async (req, res) => {
   try {
