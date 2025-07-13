@@ -184,20 +184,22 @@ export const getMyDeliveries = async (req, res) => {
     const allSubscriptions = await Subscription.find({
       user: { $in: userIds }
     })
-      .populate({ path: 'product', select: 'name' })
+      .populate({ path: 'product', select: 'name' }) // Include product name only
       .lean();
 
-    // Create a Map of user to their active subscription IDs
+    // Create a Map of user to their active subscription IDs and subscriptions
     const userActiveSubsMap = new Map();
     const subscriptionMap = new Map();
+
     allSubscriptions.forEach(sub => {
       if (sub.status === 'active') {
         const userId = sub.user.toString();
+
         if (!userActiveSubsMap.has(userId)) {
           userActiveSubsMap.set(userId, []);
         }
         userActiveSubsMap.get(userId).push(sub._id.toString());
-        subscriptionMap.set(sub._id.toString(), sub); // Store full subscription for later use
+        subscriptionMap.set(sub._id.toString(), sub); // Store subscription by ID
       }
     });
 
@@ -220,15 +222,17 @@ export const getMyDeliveries = async (req, res) => {
       userInfoMap[info.user.toString()] = info;
     });
 
-    // 9. Attach user info + product name to each delivery
+    // 9. Attach product name, addOnPrices, and user info to each delivery
     const deliveries = filteredDeliveries.map(delivery => {
       const info = userInfoMap[delivery.user.toString()];
       const subscription = subscriptionMap.get(delivery.subscription.toString());
       const productName = subscription?.product?.name || null;
+      const addOnPrices = subscription?.addOnPrices || {};
 
       return {
         ...delivery,
         productName,
+        addOnPrices, // ✅ includes eggs, ragiJawa, useAndThrowBox
         userInfo: info ? {
           fullName: info.fullName,
           phone: info.phone,
@@ -237,7 +241,7 @@ export const getMyDeliveries = async (req, res) => {
       };
     });
 
-    console.log("Filtered deliveries with active subscriptions:", deliveries);
+    console.log("Filtered deliveries with productName and addOns:", deliveries);
 
     // 10. Return enriched data
     res.status(200).json({
@@ -254,6 +258,7 @@ export const getMyDeliveries = async (req, res) => {
     });
   }
 };
+
 
 
 export const getalldeliveriesinformation = async (req, res) => {

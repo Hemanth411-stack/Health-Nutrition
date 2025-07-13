@@ -3,7 +3,6 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { 
   updateDeliveryBoyProfile,
-  logout,
   resetAuthState
 } from '../Redux/Slices/deliveryboi.js';
 import {
@@ -26,7 +25,7 @@ const hyderabadAreas = [
   "Kompally", "Kondapur", "Kothaguda", "Koti", "KPHB Colony", "Kukatpally", "Langar Houz",
   "LB Nagar", "Lal Darwaza", "Langer House", "Madhapur", "Malakpet", "Manikonda",
   "Marredpally", "Masab Tank", "Medchal", "Mehdipatnam", "Mettuguda", "Miyapur",
-  "Moosapet", "Moula Ali", "Musheerabad", "Nagole", "Nallakunta", "Nanakramguda",
+  "Moosapet", "Moula Ali", "Musheerabad", "Nagole", "Nallakunta", "Nanakramguda","Nampally","Lakdikapaul",
   "Narayanaguda", "Narsingi", "Nizampet", "Old City", "Panjagutta", "Paradise",
   "Pet Basheerabad", "Pragathi Nagar", "Quthbullapur", "Ramanthapur", "RTC X Roads",
   "Safilguda", "Sainikpuri", "Sanathnagar", "Saroornagar", "Secunderabad", "Shaikpet",
@@ -53,6 +52,7 @@ const ProfileComponent = () => {
   const [previewImage, setPreviewImage] = useState(null);
   const [errors, setErrors] = useState({});
   const [updateAttempted, setUpdateAttempted] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
   const formRef = useRef(null);
 
   useEffect(() => {
@@ -62,14 +62,22 @@ const ProfileComponent = () => {
         phone: deliveryBoyInfo.phone || '',
         serviceAreas: deliveryBoyInfo.serviceAreas || []
       });
-      // Set preview image from deliveryBoyInfo if it exists
+      
+      // Handle profile image URL properly
       if (deliveryBoyInfo.profileImage) {
-        setPreviewImage(deliveryBoyInfo.profileImage);
+        let imageUrl;
+        if (deliveryBoyInfo.profileImage.startsWith('http')) {
+          imageUrl = deliveryBoyInfo.profileImage;
+        } else if (deliveryBoyInfo.profileImage.startsWith('uploads')) {
+          imageUrl = `${process.env.REACT_APP_API_BASE_URL}/${deliveryBoyInfo.profileImage}`;
+        } else {
+          imageUrl = deliveryBoyInfo.profileImage;
+        }
+        setPreviewImage(imageUrl);
       }
     }
   }, [deliveryBoyInfo]);
 
-  // Scroll to top when status changes to succeeded
   useEffect(() => {
     if (status === 'succeeded' && updateAttempted) {
       window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -110,7 +118,19 @@ const ProfileComponent = () => {
 
   const handleRemoveImage = () => {
     setProfileImage(null);
-    setPreviewImage(deliveryBoyInfo?.profileImage || null); // Revert to original image if exists
+    if (deliveryBoyInfo?.profileImage) {
+      let imageUrl;
+      if (deliveryBoyInfo.profileImage.startsWith('http')) {
+        imageUrl = deliveryBoyInfo.profileImage;
+      } else if (deliveryBoyInfo.profileImage.startsWith('uploads')) {
+        imageUrl = `${process.env.REACT_APP_API_BASE_URL}/${deliveryBoyInfo.profileImage}`;
+      } else {
+        imageUrl = deliveryBoyInfo.profileImage;
+      }
+      setPreviewImage(imageUrl);
+    } else {
+      setPreviewImage(null);
+    }
     setErrors(prev => ({ ...prev, profileImage: null }));
   };
 
@@ -175,7 +195,6 @@ const ProfileComponent = () => {
     if (profileImage) {
       formDataToSend.append('profileImage', profileImage);
     } else if (!previewImage && deliveryBoyInfo?.profileImage) {
-      // If removing existing image
       formDataToSend.append('removeImage', 'true');
     }
     
@@ -187,9 +206,12 @@ const ProfileComponent = () => {
 
   const isSubmitting = status === 'loading';
 
+  const filteredAreas = hyderabadAreas.filter(area =>
+    area.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header with Back Button */}
       <header className="bg-white shadow-sm sticky top-0 z-10">
         <div className="max-w-4xl mx-auto px-4 py-3 flex items-center">
           <button 
@@ -203,7 +225,6 @@ const ProfileComponent = () => {
       </header>
 
       <main className="max-w-4xl mx-auto px-4 py-6">
-        {/* Success/Error messages */}
         {status === 'succeeded' && updateAttempted && (
           <div className="mb-6 p-4 bg-green-50 text-green-700 rounded-lg border border-green-200">
             Profile updated successfully!
@@ -217,7 +238,6 @@ const ProfileComponent = () => {
 
         <div className="bg-white rounded-xl shadow-sm overflow-hidden">
           <form onSubmit={handleSubmit} className="p-6" ref={formRef}>
-            {/* Profile Image Section */}
             <div className="flex flex-col items-center mb-8">
               <div className="relative mb-4">
                 <div className="w-32 h-32 rounded-full bg-gray-100 border-2 border-white shadow-md overflow-hidden">
@@ -226,6 +246,10 @@ const ProfileComponent = () => {
                       src={previewImage} 
                       alt="Profile" 
                       className="w-full h-full object-cover"
+                      onError={(e) => {
+                        e.target.onerror = null;
+                        e.target.src = 'https://via.placeholder.com/150';
+                      }}
                     />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-gray-400">
@@ -264,7 +288,6 @@ const ProfileComponent = () => {
               </div>
             </div>
 
-            {/* Name Field */}
             <div className="mb-6">
               <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor="name">
                 <div className="flex items-center">
@@ -286,7 +309,6 @@ const ProfileComponent = () => {
               )}
             </div>
 
-            {/* Phone Number Field */}
             <div className="mb-6">
               <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor="phone">
                 <div className="flex items-center">
@@ -308,7 +330,6 @@ const ProfileComponent = () => {
               )}
             </div>
 
-            {/* Service Areas Field */}
             <div className="mb-8">
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 <div className="flex items-center">
@@ -319,18 +340,16 @@ const ProfileComponent = () => {
               <div className={`rounded-lg border ${errors.serviceAreas ? 'border-red-300' : 'border-gray-300'} p-4 bg-gray-50`}>
                 <p className="text-sm text-gray-600 mb-3">Select areas where you can deliver:</p>
                 
-                {/* Search and Filter (for large lists) */}
                 <input
                   type="text"
                   placeholder="Search areas..."
                   className="w-full px-4 py-2 mb-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  onChange={(e) => {
-                    // Implement search/filter if needed
-                  }}
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
                 />
                 
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 max-h-60 overflow-y-auto p-2">
-                  {hyderabadAreas.map((area) => (
+                  {filteredAreas.map((area) => (
                     <div key={area} className="flex items-center">
                       <input
                         type="checkbox"
@@ -351,7 +370,6 @@ const ProfileComponent = () => {
                 <p className="mt-2 text-sm text-red-600">{errors.serviceAreas}</p>
               )}
               
-              {/* Selected Areas Preview */}
               {formData.serviceAreas.length > 0 && (
                 <div className="mt-4">
                   <p className="text-sm font-medium text-gray-700 mb-2">Selected Areas:</p>
@@ -369,7 +387,6 @@ const ProfileComponent = () => {
               )}
             </div>
 
-            {/* Submit Button */}
             <div className="mt-8">
               <button
                 type="submit"

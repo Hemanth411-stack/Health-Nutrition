@@ -17,7 +17,7 @@ const hyderabadAreas = [
   "Kompally", "Kondapur", "Kothaguda", "Koti", "KPHB Colony", "Kukatpally", "Langar Houz",
   "LB Nagar", "Lal Darwaza", "Langer House", "Madhapur", "Malakpet", "Manikonda",
   "Marredpally", "Masab Tank", "Medchal", "Mehdipatnam", "Mettuguda", "Miyapur",
-  "Moosapet", "Moula Ali", "Musheerabad", "Nagole", "Nallakunta", "Nanakramguda",
+  "Moosapet", "Moula Ali", "Musheerabad", "Nagole", "Nallakunta", "Nanakramguda","Nampally","Lakdikapaul",
   "Narayanaguda", "Narsingi", "Nizampet", "Old City", "Panjagutta", "Paradise",
   "Pet Basheerabad", "Pragathi Nagar", "Quthbullapur", "Ramanthapur", "RTC X Roads",
   "Safilguda", "Sainikpuri", "Sanathnagar", "Saroornagar", "Secunderabad", "Shaikpet",

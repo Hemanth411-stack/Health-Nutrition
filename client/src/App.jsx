@@ -18,6 +18,7 @@ import LocationCapture from "./components/googleaddresses.jsx";
 import ProfileComponent from "./components/deliveryboiprofile.jsx";
 import AllDeliveries from "./components/adminalldeliveries.jsx";
 import Deliveryboidetails from "./components/deliveryboidetails.jsx";
+// import SubscriptionSummary from "./components/subscriptionsummary.jsx";
 
 function App() {
   return (
@@ -41,6 +42,7 @@ function App() {
        <Route path="/google-addresses" element={<LocationCapture />} />
         <Route path="/deliveryboi-profile" element={<ProfileComponent />} />
         <Route path="/admin-all-deliveries" element={<AllDeliveries />} />
+        {/* <Route path="/admin-subscription-summary" element={<SubscriptionSummary />} /> */}
         <Route path="/admin-all-deliveriesboidetails" element={<Deliveryboidetails />} />
     </Routes>
   );

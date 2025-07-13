@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { FaTruck, FaSignOutAlt, FaUser, FaSignInAlt, FaCalendarAlt, FaMapMarkerAlt, FaCheck, FaTimes, FaExclamation } from 'react-icons/fa';
+import { FaTruck,FaPhone, FaSignOutAlt, FaUser, FaSignInAlt, FaCalendarAlt, FaMapMarkerAlt, FaCheck, FaTimes, FaExclamation } from 'react-icons/fa';
 import { useDispatch, useSelector } from 'react-redux';
 import { selectDeliveryBoyToken } from '../Redux/Slices/deliveryboi';
 import { Link } from 'react-router-dom';
@@ -21,6 +21,7 @@ const DeliveryManagement = () => {
     updateLoading,
     updateError
   } = useSelector(state => state.deliveriesmanagement);
+  console.log("deliuveru bon deliveries",deliveries)
   const navigate = useNavigate();
   const [filter, setFilter] = useState('all');
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
@@ -168,104 +169,171 @@ const DeliveryManagement = () => {
             <p className="text-gray-500 text-lg">No deliveries found for the selected criteria.</p>
           </div>
         ) : (
-          <div className="bg-white shadow overflow-hidden rounded-lg">
-            <ul className="divide-y divide-gray-200">
-              {filteredDeliveries.map((delivery) => (
-                <li key={delivery._id} className="px-3 sm:px-6 py-4">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                    <div className="flex items-start space-x-3">
-                      <div className="flex-shrink-0 mt-1">
-                        {getStatusIcon(delivery.status)}
-                      </div>
-                      <div className="min-w-0">
-                        <h3 className="text-base font-medium text-gray-900 truncate">
-                          {delivery.userInfo?.fullName || 'Unknown User'}
-                        </h3>
-                        <p className="text-sm text-gray-500 truncate">
-                          {delivery.userInfo?.phone || 'No phone number'}
-                        </p>
-                        {delivery.userInfo?.googleMapLink && (
-                          <a 
-                            href={delivery.userInfo.googleMapLink} 
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                            className="text-sm text-blue-600 hover:text-blue-800 hover:underline block truncate"
-                          >
-                            View Map
-                          </a>
-                        )}
-                      </div>
-                    </div>
-                    <div className="sm:ml-4">
-                      <span className={`px-2 py-1 text-xs rounded-full ${
-                        delivery.status === 'delivered' ? 'bg-green-100 text-green-800' :
-                        delivery.status === 'missed' ? 'bg-red-100 text-red-800' :
-                        'bg-yellow-100 text-yellow-800'
-                      }`}>
-                        {delivery.status}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="mt-3 grid grid-cols-1 gap-2 sm:gap-4">
-                    <div className="flex items-start">
-                      <FaMapMarkerAlt className="mt-1 mr-2 text-gray-400 flex-shrink-0" />
-                      <div>
-                        <p className="text-sm text-gray-900">
-                          {delivery.address?.street}, {delivery.address?.area}
-                        </p>
-                        <p className="text-sm text-gray-500">
-                          {delivery.address?.city}, {delivery.address?.state} - {delivery.address?.pincode}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex items-start">
-                      <FaCalendarAlt className="mt-1 mr-2 text-gray-400 flex-shrink-0" />
-                      <div>
-                        <p className="text-sm text-gray-900">
-                          {new Date(delivery.deliveryDate).toLocaleDateString()}
-                        </p>
-                        <p className="text-sm text-gray-500">
-                          {delivery.slot === 'morning 6Am - 8Am' ? 'Morning (6AM-8AM)' : 'Morning (8AM-10AM)'}
-                          {delivery.isFestivalOrSunday && ' (Holiday Delivery)'}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="mt-3 flex flex-wrap justify-end gap-2">
-                    {delivery.status !== 'delivered' && (
-                      <button
-                        onClick={() => handleStatusUpdate(delivery._id, 'delivered')}
-                        disabled={updateLoading}
-                        className="inline-flex items-center px-2 sm:px-3 py-1 border border-transparent text-xs sm:text-sm leading-4 sm:leading-5 font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50"
-                      >
-                        {updateLoading ? 'Updating...' : 'Delivered'}
-                      </button>
-                    )}
-                    {delivery.status !== 'missed' && (
-                      <button
-                        onClick={() => handleStatusUpdate(delivery._id, 'missed')}
-                        disabled={updateLoading}
-                        className="inline-flex items-center px-2 sm:px-3 py-1 border border-transparent text-xs sm:text-sm leading-4 sm:leading-5 font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50"
-                      >
-                        {updateLoading ? 'Updating...' : 'Missed'}
-                      </button>
-                    )}
-                    {delivery.status !== 'pending' && (
-                      <button
-                        onClick={() => handleStatusUpdate(delivery._id, 'pending')}
-                        disabled={updateLoading}
-                        className="inline-flex items-center px-2 sm:px-3 py-1 border border-gray-300 text-xs sm:text-sm leading-4 sm:leading-5 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
-                      >
-                        {updateLoading ? 'Updating...' : 'Pending'}
-                      </button>
-                    )}
-                  </div>
-                </li>
-              ))}
-            </ul>
+          <div className="bg-white shadow-lg rounded-xl overflow-hidden">
+  <ul className="divide-y divide-gray-100">
+    {filteredDeliveries.map((delivery) => (
+      <li key={delivery._id} className="px-4 py-5 sm:px-6 hover:bg-gray-50 transition-colors duration-150">
+        <div className="flex flex-col sm:flex-row gap-4">
+          {/* Left Section - User Info */}
+          <div className="flex-1 flex items-start space-x-4 min-w-0">
+            <div className="flex-shrink-0 mt-1">
+              {getStatusIcon(delivery.status)}
+            </div>
+            
+            <div className="min-w-0 space-y-2">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-4">
+                <h3 className="text-lg font-semibold text-gray-900 truncate">
+                  {delivery.userInfo?.fullName || 'Unknown User'}
+                </h3>
+                <span className={`px-2.5 py-0.5 text-xs font-medium rounded-full ${
+                  delivery.status === 'delivered' ? 'bg-green-100 text-green-800' :
+                  delivery.status === 'missed' ? 'bg-red-100 text-red-800' :
+                  'bg-yellow-100 text-yellow-800'
+                }`}>
+                  {delivery.status.charAt(0).toUpperCase() + delivery.status.slice(1)}
+                </span>
+              </div>
+              
+              <p className="text-sm text-gray-600 flex items-center">
+  <FaPhone className="mr-1.5 flex-shrink-0" size={12} />
+  {delivery.userInfo?.phone ? (
+    <a 
+      href={`tel:${delivery.userInfo.phone}`}
+      className="hover:text-blue-600 hover:underline transition-colors"
+    >
+      {delivery.userInfo.phone}
+    </a>
+  ) : (
+    'No phone number'
+  )}
+</p>
+              
+              <p className="text-sm font-medium text-indigo-600">
+                {delivery.productName || 'No product name'}
+              </p>
+              
+              {/* Add-ons Section */}
+              <div className="mt-2 space-y-1.5">
+                <div className="flex justify-between items-center py-1 border-b border-gray-100">
+                  <span className="text-sm font-medium text-gray-700">Eggs</span>
+                  <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
+                    delivery.addOnPrices?.eggs > 0 ? 'bg-green-50 text-green-700' : 'bg-gray-50 text-gray-500'
+                  }`}>
+                    {delivery.addOnPrices?.eggs > 0 ? 'Included' : 'Not included'}
+                  </span>
+                </div>
+                
+                <div className="flex justify-between items-center py-1 border-b border-gray-100">
+                  <span className="text-sm font-medium text-gray-700">Ragi Jawa</span>
+                  <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
+                    delivery.addOnPrices?.ragiJawa > 0 ? 'bg-green-50 text-green-700' : 'bg-gray-50 text-gray-500'
+                  }`}>
+                    {delivery.addOnPrices?.ragiJawa > 0 ? 'Included' : 'Not included'}
+                  </span>
+                </div>
+                
+                <div className="flex justify-between items-center py-1">
+                  <span className="text-sm font-medium text-gray-700">Use & Throw Box</span>
+                  <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
+                    delivery.addOnPrices?.useAndThrowBox > 0 ? 'bg-green-50 text-green-700' : 'bg-gray-50 text-gray-500'
+                  }`}>
+                    {delivery.addOnPrices?.useAndThrowBox > 0 ? 'Included' : 'Not included'}
+                  </span>
+                </div>
+              </div>
+              
+              {delivery.userInfo?.googleMapLink && (
+                <a 
+                  href={delivery.userInfo.googleMapLink} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center mt-2 text-sm text-blue-600 hover:text-blue-800 hover:underline"
+                >
+                  <FaMapMarkerAlt className="mr-1.5" size={12} />
+                  View on Map
+                </a>
+              )}
+            </div>
           </div>
+          
+          {/* Right Section - Delivery Info */}
+          <div className="sm:w-64 space-y-3">
+            <div className="bg-gray-50 p-3 rounded-lg">
+              <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
+                Delivery Address
+              </h4>
+              <div className="space-y-1">
+                <p className="text-sm text-gray-900 line-clamp-1">
+                  {delivery.address?.street}
+                </p>
+                <p className="text-sm text-gray-600">
+                  {delivery.address?.area}, {delivery.address?.city}
+                </p>
+                <p className="text-sm text-gray-500">
+                  {delivery.address?.state} - {delivery.address?.pincode}
+                </p>
+              </div>
+            </div>
+            
+            <div className="bg-gray-50 p-3 rounded-lg">
+              <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
+                Delivery Schedule
+              </h4>
+              <div className="space-y-1">
+                <p className="text-sm font-medium text-gray-900">
+                  {new Date(delivery.deliveryDate).toLocaleDateString('en-US', {
+                    weekday: 'short',
+                    month: 'short',
+                    day: 'numeric'
+                  })}
+                </p>
+                <p className="text-sm text-gray-600">
+                  {delivery.slot === 'morning 6Am - 8Am' ? '6:00-8:00 AM' : '8:00-10:00 AM'}
+                </p>
+                {delivery.isFestivalOrSunday && (
+                  <p className="text-xs text-yellow-700 font-medium">
+                    Holiday Delivery
+                  </p>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        {/* Action Buttons */}
+        <div className="mt-4 flex flex-wrap justify-end gap-2">
+          {delivery.status !== 'delivered' && (
+            <button
+              onClick={() => handleStatusUpdate(delivery._id, 'delivered')}
+              disabled={updateLoading}
+              className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-70 disabled:cursor-not-allowed transition-colors"
+            >
+              {updateLoading ? 'Processing...' : 'Mark Delivered'}
+            </button>
+          )}
+          {delivery.status !== 'missed' && (
+            <button
+              onClick={() => handleStatusUpdate(delivery._id, 'missed')}
+              disabled={updateLoading}
+              className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md shadow-sm text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-70 disabled:cursor-not-allowed transition-colors"
+            >
+              {updateLoading ? 'Processing...' : 'Mark Missed'}
+            </button>
+          )}
+          {delivery.status !== 'pending' && (
+            <button
+              onClick={() => handleStatusUpdate(delivery._id, 'pending')}
+              disabled={updateLoading}
+              className="inline-flex items-center px-3 py-1.5 border border-gray-300 text-xs font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-70 disabled:cursor-not-allowed transition-colors"
+            >
+              {updateLoading ? 'Processing...' : 'Set Pending'}
+            </button>
+          )}
+        </div>
+      </li>
+    ))}
+  </ul>
+</div>
         )}
       </main>
     </div>

@@ -441,6 +441,8 @@ export const deleteSubscriptionAndDeliveries = async (req, res) => {
 
 
 
+
+
 // Track paused days for each subscription
 
 
@@ -668,3 +670,159 @@ export const getPauseInfo = async (req, res) => {
   }
 };
 
+
+
+export const getSubscriptionSummary = async (req, res) => {
+  try {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    // Get all active subscriptions with product details
+    const subscriptions = await Subscription.find({ status: 'active' })
+      .populate({ path: 'product', select: 'name' })
+      .lean();
+
+    // Get user information
+    const userIds = [...new Set(subscriptions.map(sub => sub.user.toString()))];
+    const userInfos = await UserInfo.find({ user: { $in: userIds } })
+      .select('user fullName')
+      .lean();
+
+    const userInfoMap = userInfos.reduce((acc, info) => {
+      acc[info.user.toString()] = info.fullName;
+      return acc;
+    }, {});
+
+    // Initialize counters
+    const summary = {
+      packs: {
+        family: 0,
+        bachelor: 0,
+        totalActive: 0,
+        totalSubscriptions: subscriptions.length || 0
+      },
+      addOns: {
+        eggs: 0,
+        ragiJawa: 0,
+        useAndThrowBox: 0
+      },
+      paused: {
+        today: 0,
+        total: 0, // Will only count subscriptions paused today
+        upcoming: []
+      }
+    };
+
+    // Process each subscription
+    const subscriptionDetails = subscriptions.map(sub => {
+      const productName = sub.product?.name?.toLowerCase() || '';
+      const isFamilyPack = productName.includes('family');
+      const isBachelorPack = productName.includes('bachelor');
+
+      // Process all paused deliveries
+      const pausedDeliveries = (sub.pausedDeliveries || []).map(pause => {
+        const originalDate = new Date(pause.originalDate);
+        originalDate.setHours(0, 0, 0, 0);
+        
+        const rescheduledDate = pause.rescheduledDate ? new Date(pause.rescheduledDate) : null;
+        if (rescheduledDate) rescheduledDate.setHours(0, 0, 0, 0);
+        
+        return {
+          originalDate,
+          rescheduledDate,
+          isToday: originalDate.getTime() === today.getTime(),
+          isPast: originalDate.getTime() < today.getTime(),
+          isFuture: originalDate.getTime() > today.getTime()
+        };
+      });
+
+      // Check if paused today (exact date match)
+      const isPausedToday = pausedDeliveries.some(pause => pause.isToday);
+      
+      // Check if has any future pause dates
+      const hasFuturePauses = pausedDeliveries.some(pause => pause.isFuture);
+
+      // Count only if not paused today
+      const shouldCountForToday = !isPausedToday;
+
+      if (shouldCountForToday) {
+        if (isFamilyPack) summary.packs.family++;
+        if (isBachelorPack) summary.packs.bachelor++;
+        summary.packs.totalActive++;
+
+        if (sub.addOnPrices?.eggs > 0) summary.addOns.eggs++;
+        if (sub.addOnPrices?.ragiJawa > 0) summary.addOns.ragiJawa++;
+        if (sub.addOnPrices?.useAndThrowBox > 0) summary.addOns.useAndThrowBox++;
+      }
+
+      // Update paused counters
+      if (isPausedToday) {
+        summary.paused.today++;
+        summary.paused.total++; // Only count in total paused if paused today
+      }
+
+      // Track future pauses
+      const futurePauses = pausedDeliveries.filter(pause => pause.isFuture);
+      futurePauses.forEach(pause => {
+        const dateStr = pause.originalDate.toISOString().split('T')[0];
+        const existing = summary.paused.upcoming.find(u => u.date === dateStr);
+        if (existing) {
+          existing.count++;
+        } else {
+          summary.paused.upcoming.push({
+            date: dateStr,
+            count: 1,
+            rescheduledDate: pause.rescheduledDate?.toISOString().split('T')[0]
+          });
+        }
+      });
+
+      return {
+        user: {
+          id: sub.user.toString(),
+          name: userInfoMap[sub.user.toString()] || 'Unknown'
+        },
+        product: {
+          id: sub.product?._id.toString(),
+          name: sub.product?.name || 'Unnamed'
+        },
+        addOns: {
+          eggs: sub.addOnPrices?.eggs > 0,
+          ragiJawa: sub.addOnPrices?.ragiJawa > 0,
+          useAndThrowBox: sub.addOnPrices?.useAndThrowBox > 0
+        },
+        status: {
+          isActive: true,
+          isPausedToday,
+          hasFuturePauses,
+          pausedDays: sub.pausedDays || 0,
+          pausedDates: pausedDeliveries.map(p => p.originalDate.toISOString().split('T')[0]),
+          futurePauses: futurePauses.map(p => ({
+            date: p.originalDate.toISOString().split('T')[0],
+            rescheduledDate: p.rescheduledDate?.toISOString().split('T')[0]
+          }))
+        },
+        shouldPrepareBox: shouldCountForToday
+      };
+    });
+
+    // Sort upcoming pauses by date
+    summary.paused.upcoming.sort((a, b) => new Date(a.date) - new Date(b.date));
+
+    res.status(200).json({
+      success: true,
+      data: {
+        summary,
+        subscriptions: subscriptionDetails
+      }
+    });
+
+  } catch (error) {
+    console.error('Subscription summary error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch subscription summary',
+      error: error.message
+    });
+  }
+};

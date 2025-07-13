@@ -1,5 +1,5 @@
 import express from 'express';
-import { createSubscription, getallSubscriptions, getPauseInfo, getUserSubscriptions, getUserSubscriptionStats, pauseAndRescheduleDeliveries, updateSubscriptionStatus } from '../controllers/subscriptionController.js';
+import { createSubscription, getallSubscriptions, getPauseInfo, getSubscriptionSummary, getUserSubscriptions, getUserSubscriptionStats, pauseAndRescheduleDeliveries, updateSubscriptionStatus } from '../controllers/subscriptionController.js';
 import { authorize, protect } from '../middleware/authMiddleware.js'; 
 
 
@@ -14,4 +14,6 @@ router.put("/update-status", protect, authorize('admin'), updateSubscriptionStat
 
 router.post('/pause-reshedule',protect,pauseAndRescheduleDeliveries)
 router.get('/getpause-deliveries/:subscriptionId',protect,getPauseInfo)
+
+router.get('/summary',getSubscriptionSummary)
 export default router;

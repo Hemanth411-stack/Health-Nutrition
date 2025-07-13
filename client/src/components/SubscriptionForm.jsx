@@ -11,7 +11,6 @@ const SubscriptionForm = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const plan = location.state?.plan;
-  
   // Refs for scrolling to errors
   const firstNameRef = useRef(null);
   const lastNameRef = useRef(null);
@@ -546,7 +545,7 @@ const SubscriptionForm = () => {
                         <input
                           type="checkbox"
                           checked={formData.addOnPrices.useAndThrowBox > 0}
-                          onChange={() => handleAddOnChange('useAndThrowBox', 200)}
+                          onChange={() => handleAddOnChange('useAndThrowBox', 400)}
                           className="w-5 h-5 rounded border-gray-300 text-green-600 focus:ring-green-500"
                         />
                         <div className="ml-3">
@@ -569,7 +568,7 @@ const SubscriptionForm = () => {
                         />
                         <div className="ml-3">
                           <h3 className="font-medium">Eggs</h3>
-                          <p className="text-sm text-gray-500">2 eggs daily (₹10/day)</p>
+                           {/* <p className="text-sm text-gray-500">2 eggs daily (₹10/day)</p> */}
                         </div>
                       </div>
                       <span className="font-medium">+₹390</span>
@@ -582,12 +581,12 @@ const SubscriptionForm = () => {
                         <input
                           type="checkbox"
                           checked={formData.addOnPrices.ragiJawa > 0}
-                          onChange={() => handleAddOnChange('ragiJawa', 400)}
+                          onChange={() => handleAddOnChange('ragiJawa', 600)}
                           className="w-5 h-5 rounded border-gray-300 text-green-600 focus:ring-green-500"
                         />
                         <div className="ml-3">
                           <h3 className="font-medium">Ragi Jawa</h3>
-                          <p className="text-sm text-gray-500">250ml daily (₹13/day)</p>
+                          {/* <p className="text-sm text-gray-500">250ml daily (₹13/day)</p> */}
                         </div>
                       </div>
                       <span className="font-medium">+₹600</span>

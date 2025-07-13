@@ -54,11 +54,105 @@ const deliveryBoysSlice = createSlice({
 const { setSelectedAreas } = deliveryBoysSlice.actions;
 const store = configureStore({ reducer: { deliveryBoys: deliveryBoysSlice.reducer } });
 
-// ================== COMPONENT ================== //
+// ================== COMPONENTS ================== //
+const AreasList = ({ areas }) => {
+  const [showAll, setShowAll] = useState(false);
+  const MAX_VISIBLE_AREAS = 3;
+
+  if (!areas || areas.length === 0) {
+    return <span className="text-xs text-gray-400">No areas assigned</span>;
+  }
+
+  const visibleAreas = showAll ? areas : areas.slice(0, MAX_VISIBLE_AREAS);
+  const remainingCount = areas.length - MAX_VISIBLE_AREAS;
+
+  return (
+    <div className="flex flex-wrap gap-2">
+      {visibleAreas.map((area) => (
+        <span 
+          key={area} 
+          className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800"
+        >
+          {area}
+        </span>
+      ))}
+      {!showAll && remainingCount > 0 && (
+        <button
+          onClick={() => setShowAll(true)}
+          className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800 hover:bg-gray-200"
+        >
+          +{remainingCount} more
+        </button>
+      )}
+    </div>
+  );
+};
+
+const Pagination = ({ currentPage, totalPages, onPageChange }) => {
+  const getVisiblePages = () => {
+    const visiblePages = [];
+    const maxVisible = 5;
+    let start = Math.max(1, currentPage - Math.floor(maxVisible / 2));
+    let end = Math.min(totalPages, start + maxVisible - 1);
+
+    if (end - start + 1 < maxVisible) {
+      start = Math.max(1, end - maxVisible + 1);
+    }
+
+    for (let i = start; i <= end; i++) {
+      visiblePages.push(i);
+    }
+
+    return visiblePages;
+  };
+
+  return (
+    <div className="flex flex-col sm:flex-row items-center justify-between mt-8 gap-4">
+      <div className="text-sm text-gray-700">
+        Page {currentPage} of {totalPages}
+      </div>
+      <nav className="flex gap-1">
+        <button
+          onClick={() => onPageChange(Math.max(1, currentPage - 1))}
+          disabled={currentPage === 1}
+          className={`px-3 py-1 rounded-md ${currentPage === 1 ? 'bg-gray-200 text-gray-500 cursor-not-allowed' : 'bg-blue-500 text-white hover:bg-blue-600'}`}
+        >
+          Previous
+        </button>
+        
+        {getVisiblePages().map((pageNumber) => (
+          <button
+            key={pageNumber}
+            onClick={() => onPageChange(pageNumber)}
+            className={`px-3 py-1 rounded-md hidden sm:block ${currentPage === pageNumber ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
+          >
+            {pageNumber}
+          </button>
+        ))}
+        
+        <button className="px-3 py-1 bg-blue-600 text-white rounded-md block sm:hidden">
+          {currentPage}
+        </button>
+        
+        <button
+          onClick={() => onPageChange(Math.min(totalPages, currentPage + 1))}
+          disabled={currentPage === totalPages}
+          className={`px-3 py-1 rounded-md ${currentPage === totalPages ? 'bg-gray-200 text-gray-500 cursor-not-allowed' : 'bg-blue-500 text-white hover:bg-blue-600'}`}
+        >
+          Next
+        </button>
+      </nav>
+    </div>
+  );
+};
+
+// ================== MAIN COMPONENT ================== //
 const DeliveryBoysManagement = () => {
   const dispatch = useDispatch();
   const { list: deliveryBoys, loading, error } = useSelector((state) => state.deliveryBoys);
   const [selectedImage, setSelectedImage] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const DELIVERY_BOYS_PER_PAGE = 8;
 
   useEffect(() => {
     dispatch(fetchDeliveryBoys());
@@ -67,6 +161,18 @@ const DeliveryBoysManagement = () => {
   const handleImageError = (e) => {
     e.target.onerror = null;
     e.target.style.display = 'none';
+  };
+
+  // Pagination logic
+  const totalPages = Math.ceil(deliveryBoys.length / DELIVERY_BOYS_PER_PAGE);
+  const paginatedDeliveryBoys = deliveryBoys.slice(
+    (currentPage - 1) * DELIVERY_BOYS_PER_PAGE,
+    currentPage * DELIVERY_BOYS_PER_PAGE
+  );
+
+  const handlePageChange = (pageNumber) => {
+    setCurrentPage(pageNumber);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   if (loading) {
@@ -133,7 +239,7 @@ const DeliveryBoysManagement = () => {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        {deliveryBoys.map((deliveryBoy) => (
+        {paginatedDeliveryBoys.map((deliveryBoy) => (
           <div 
             key={deliveryBoy._id} 
             className="bg-white rounded-lg shadow-sm overflow-hidden border border-gray-200 hover:shadow-md transition-shadow duration-300"
@@ -171,30 +277,20 @@ const DeliveryBoysManagement = () => {
                 <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
                   Service Areas
                 </h4>
-                <div className="flex flex-wrap gap-2">
-                  {deliveryBoy.serviceAreas?.length > 0 ? (
-                    deliveryBoy.serviceAreas.slice(0, 3).map((area) => (
-                      <span 
-                        key={area} 
-                        className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800"
-                      >
-                        {area}
-                      </span>
-                    ))
-                  ) : (
-                    <span className="text-xs text-gray-400">No areas assigned</span>
-                  )}
-                  {deliveryBoy.serviceAreas?.length > 3 && (
-                    <span className="text-xs text-gray-500">
-                      +{deliveryBoy.serviceAreas.length - 3} more
-                    </span>
-                  )}
-                </div>
+                <AreasList areas={deliveryBoy.serviceAreas} />
               </div>
             </div>
           </div>
         ))}
       </div>
+
+      {totalPages > 1 && (
+        <Pagination 
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={handlePageChange}
+        />
+      )}
     </div>
   );
 };

@@ -9,24 +9,25 @@ import {
 } from '../Redux/Slices/deliveryboi';
 
 const hyderabadAreas = [
-  "Ameerpet", "Abids", "Adikmet", "Alwal", "Amberpet", "Asif Nagar", "Attapur",
-  "Azampura", "Bachupally", "Bahadurpura", "Balanagar", "Banjara Hills", "Barkatpura",
-  "Basheerbagh", "Begumpet", "Bharat Nagar", "Boduppal", "Borabanda", "Bowenpally",
-  "Chandanagar", "Chilkur", "Chintal", "Dammaiguda", "Dilsukhnagar", "DLF Gachibowli",
-  "ECIL", "Erragadda", "Film Nagar", "Gachibowli", "Gaganpahad", "Gajularamaram",
-  "Gandhinagar", "Ghatkesar", "Golconda", "Gowlidoddi", "Hafeezpet", "Himayatnagar",
-  "Hitech City", "Hyderguda", "Jambagh", "Jubilee Hills", "Jagadgirigutta",
-  "Jeedimetla", "Kachiguda", "Kalasiguda", "Karkhana", "Khairatabad", "Kismatpur",
-  "Kompally", "Kondapur", "Kothaguda", "Koti", "KPHB Colony", "Kukatpally", "Langar Houz",
-  "LB Nagar", "Lal Darwaza", "Langer House", "Madhapur", "Malakpet", "Manikonda",
-  "Marredpally", "Masab Tank", "Medchal", "Mehdipatnam", "Mettuguda", "Miyapur",
-  "Moosapet", "Moula Ali", "Musheerabad", "Nagole", "Nallakunta", "Nanakramguda",
-  "Narayanaguda", "Narsingi", "Nizampet", "Old City", "Panjagutta", "Paradise",
-  "Pet Basheerabad", "Pragathi Nagar", "Quthbullapur", "Ramanthapur", "RTC X Roads",
-  "Safilguda", "Sainikpuri", "Sanathnagar", "Saroornagar", "Secunderabad", "Shaikpet",
-  "Shamshabad", "Shapur Nagar", "Shivam Road", "Somajiguda", "SR Nagar",
-  "Sri Nagar Colony", "Tarnaka", "Tolichowki", "Uppal", "Vidyanagar", "West Marredpally",
-  "Yapral", "Yousufguda"
+  "Abids", "Adikmet", "Alwal", "Amberpet", "Ameerpet", "Asif Nagar", "Athapur",
+  "Attapur", "Azampura", "Bachupally", "Bahadurpura", "Balanagar", "Banjara Hills", 
+  "Barkatpura", "Basheerbagh", "Begumpet", "Bharat Nagar", "Boduppal", "Borabanda", 
+  "Bowenpally", "Chandanagar", "Chilkur", "Chintal", "Dammaiguda", "Dilsukhnagar", 
+  "DLF Gachibowli", "ECIL", "Erragadda", "Film Nagar", "Gachibowli", "Gaganpahad", 
+  "Gajularamaram", "Gandhinagar", "Ghatkesar", "Golconda", "Gowlidoddi", "Hafeezpet", 
+  "Himayatnagar", "Hitech City", "Hyderguda", "Jagadgirigutta", "Jambagh", 
+  "Jeedimetla", "Jubilee Hills", "Kachiguda", "Kalasiguda", "Karkhana", "Khairatabad", 
+  "Kismatpur", "Kompally", "Kondapur", "Kothaguda", "Koti", "KPHB Colony", "Kukatpally", 
+  "Langar Houz", "LB Nagar", "Lal Darwaza", "Langer House", "Madhapur", "Madhinaguda",
+  "Malakpet", "Manikonda", "Marredpally", "Masab Tank", "Medchal", "Mehdipatnam", 
+  "Mettuguda", "Miyapur", "Moosapet", "Moula Ali", "Musheerabad", "Nagole", 
+  "Nallagandla", "Nallakunta", "Nanakramguda","Nampally","Lakdikapaul", "Narayanaguda", "Narsingi", "Nizampet", 
+  "Nursing", "Old City", "Panjagutta", "Paradise", "Pet Basheerabad", "Pragathi Nagar", 
+  "Quthbullapur", "Ramanthapur", "RTC X Roads", "Safilguda", "Sainikpuri", 
+  "Sanathnagar", "Saroornagar", "Secunderabad", "Shaikpet", "Shamshabad", 
+  "Shapur Nagar", "Sherlingampally", "Shivam Road", "Somajiguda", "SR Nagar",
+  "Sri Nagar Colony", "Tarnaka", "Tolichowki", "Uppal", "Vidyanagar", 
+  "West Marredpally", "Yapral", "Yousufguda"
 ];
 
 const DeliveryBoyRegister = () => {
@@ -47,6 +48,12 @@ const DeliveryBoyRegister = () => {
   const [profileImage, setProfileImage] = useState(null);
   const [previewImage, setPreviewImage] = useState(null);
   const [errors, setErrors] = useState({});
+  const [searchTerm, setSearchTerm] = useState('');
+
+  // Filter areas based on search term
+  const filteredAreas = hyderabadAreas.filter(area =>
+    area.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   // Redirect if already logged in
   useEffect(() => {
@@ -76,12 +83,11 @@ const DeliveryBoyRegister = () => {
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
-      // Validate file type and size
       if (!file.type.match('image.*')) {
         setErrors(prev => ({ ...prev, profileImage: 'Only image files are allowed' }));
         return;
       }
-      if (file.size > 5 * 1024 * 1024) { // 5MB limit
+      if (file.size > 5 * 1024 * 1024) {
         setErrors(prev => ({ ...prev, profileImage: 'File size must be less than 5MB' }));
         return;
       }
@@ -89,7 +95,6 @@ const DeliveryBoyRegister = () => {
       setProfileImage(file);
       setErrors(prev => ({ ...prev, profileImage: null }));
       
-      // Create preview URL
       const reader = new FileReader();
       reader.onloadend = () => {
         setPreviewImage(reader.result);
@@ -120,6 +125,10 @@ const DeliveryBoyRegister = () => {
         [name]: null
       });
     }
+  };
+
+  const handleSearchChange = (e) => {
+    setSearchTerm(e.target.value);
   };
 
   const handleAreaSelect = (area) => {
@@ -170,7 +179,6 @@ const DeliveryBoyRegister = () => {
     
     dispatch(resetAuthState());
     
-    // Create FormData for the API
     const formDataToSend = new FormData();
     formDataToSend.append('name', formData.name);
     formDataToSend.append('phone', formData.phone);
@@ -392,22 +400,37 @@ const DeliveryBoyRegister = () => {
                 Service Areas
               </label>
               <div className="mt-1">
+                {/* Search Input */}
+                <div className="mb-2">
+                  <input
+                    type="text"
+                    placeholder="Search areas..."
+                    value={searchTerm}
+                    onChange={handleSearchChange}
+                    className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                  />
+                </div>
+                
                 <div className="relative">
                   <div className="max-h-60 overflow-y-auto border border-gray-300 rounded-md p-2">
-                    {hyderabadAreas.map((area) => (
-                      <div key={area} className="flex items-center">
-                        <input
-                          id={`area-${area}`}
-                          type="checkbox"
-                          checked={formData.serviceAreas.includes(area)}
-                          onChange={() => handleAreaSelect(area)}
-                          className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                        />
-                        <label htmlFor={`area-${area}`} className="ml-2 block text-sm text-gray-700">
-                          {area}
-                        </label>
-                      </div>
-                    ))}
+                    {filteredAreas.length > 0 ? (
+                      filteredAreas.map((area) => (
+                        <div key={area} className="flex items-center">
+                          <input
+                            id={`area-${area}`}
+                            type="checkbox"
+                            checked={formData.serviceAreas.includes(area)}
+                            onChange={() => handleAreaSelect(area)}
+                            className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                          />
+                          <label htmlFor={`area-${area}`} className="ml-2 block text-sm text-gray-700">
+                            {area}
+                          </label>
+                        </div>
+                      ))
+                    ) : (
+                      <p className="text-sm text-gray-500 p-2">No areas found matching your search</p>
+                    )}
                   </div>
                   <button
                     type="button"
