@@ -108,8 +108,8 @@ const SubscriptionPlans = () => {
   if (status === 'loading') return <div className="text-center py-20">Loading plans...</div>;
   if (status === 'failed') return <div className="text-center py-20 text-red-500">Error: {error}</div>;
 
-  const familyPlan = products.find(product => product.name === "Family Pack");
-  const bachelorPlan = products.find(product => product.name === "Bachelor Pack");
+  const familyPlan = products.find(product => product.name === "Family Box");
+  const bachelorPlan = products.find(product => product.name === "Bachelor Box");
   const babyPlan = products.find(product => product.name === "Kid box");
 
   const renderPlanCard = (plan, planType) => {
@@ -161,8 +161,8 @@ const SubscriptionPlans = () => {
         <div className={`${colorScheme.bg} text-white py-6 px-6`}>
           <h3 className="text-2xl font-bold">{plan.name}</h3>
           <span className="text-sm font-bold bg-opacity-20 py-1 rounded-full">
-          {plan.name === "Family Pack" ? "570gm" : 
-          plan.name === "Bachelor Pack" ? "400gm" : 
+          {plan.name === "Family Box" ? "570gm" : 
+          plan.name === "Bachelor Box" ? "400gm" : 
           plan.name === "Kid box" ? "150gm" : ""}
           </span>
           <div className="flex items-end mt-2">
@@ -203,7 +203,7 @@ const SubscriptionPlans = () => {
 
           <div className="mb-6 flex flex-col md:flex-row gap-4 flex-grow">
             <div className="flex-1">
-              <h4 className="font-semibold mb-3">Package Includes:</h4>
+              <h4 className="font-semibold mb-3">Boxage Includes:</h4>
               <ul className="space-y-2">
                 {plan.contents?.includes?.map((item, index) => (
                   <li key={index} className="flex items-start">
