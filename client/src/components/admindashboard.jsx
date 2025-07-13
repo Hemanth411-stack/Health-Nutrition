@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import DeliveryVerificationDashboard from './admindeliveryverification.jsx';
 import SubscriptionManagement from './adminpage.jsx';
-import SubscriptionSummary from './SubscriptionSummary'; // Import the new component
+import SubscriptionSummary from './subscriptionsummary.jsx'; // Import the new component
 
 const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState('deliveries');
