@@ -53,8 +53,12 @@ export const getUserDeliveries = async (req, res) => {
 
     // Get today's start and end time
     const today = new Date();
-    const startOfDay = new Date(today.setHours(0, 0, 0, 0));
-    const endOfDay = new Date(today.setHours(23, 59, 59, 999));
+    const startOfDay = new Date(today);
+startOfDay.setHours(0, 0, 0, 0);
+
+const endOfDay = new Date(today);
+endOfDay.setHours(23, 59, 59, 999);
+
 
     // Fetch deliveries for today linked to any active subscription
     const deliveries = await Delivery.find({

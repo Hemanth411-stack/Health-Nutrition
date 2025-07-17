@@ -604,22 +604,7 @@ const SubscriptionForm = () => {
                   Payment Method
                 </h2>
                 <div className="space-y-4">
-                  <div
-                    className={`border rounded-lg p-4 cursor-pointer ${formData.paymentMethod === "COD" ? "border-green-500 bg-green-50" : "border-gray-200"}`}
-                    onClick={() => setFormData({...formData, paymentMethod: "COD"})}
-                  >
-                    <div className="flex items-center">
-                      <div className={`w-5 h-5 rounded-full border flex items-center justify-center ${formData.paymentMethod === "COD" ? "border-green-500" : "border-gray-300"}`}>
-                        {formData.paymentMethod === "COD" && (
-                          <div className="w-3 h-3 rounded-full bg-green-500"></div>
-                        )}
-                      </div>
-                      <div className="ml-3 flex items-center">
-                        <i className="fas fa-money-bill-wave text-gray-600 mr-2"></i>
-                        <span>COD on Delivery</span>
-                      </div>
-                    </div>
-                  </div>
+                  
                   <div
                     className={`border rounded-lg p-4 cursor-pointer ${formData.paymentMethod === "PhonePe" ? "border-green-500 bg-green-50" : "border-gray-200"}`}
                     onClick={() => setFormData({...formData, paymentMethod: "PhonePe"})}
